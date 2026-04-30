@@ -1,0 +1,167 @@
+basePath: /api
+definitions:
+  models.ActiveBuff:
+    properties:
+      affects_who:
+        description: '"hero" | "monster"'
+        type: string
+      amount:
+        type: integer
+      target_stat:
+        type: string
+      turns_left:
+        type: integer
+    type: object
+  models.BattleState:
+    properties:
+      active_buffs:
+        items:
+          $ref: '#/definitions/models.ActiveBuff'
+        type: array
+      hero_hp:
+        type: integer
+      hero_max_hp:
+        type: integer
+      hero_stats:
+        $ref: '#/definitions/models.Stat'
+      monster_hp:
+        type: integer
+      monster_id:
+        type: string
+      monster_max_hp:
+        type: integer
+      monster_stats:
+        $ref: '#/definitions/models.Stat'
+      turn:
+        type: integer
+    type: object
+  models.Monster:
+    properties:
+      difficulty:
+        type: integer
+      id:
+        type: string
+      moves:
+        description: ← string ID-evi
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      sprite:
+        type: string
+      stats:
+        $ref: '#/definitions/models.Stat'
+      xp_reward:
+        type: integer
+    type: object
+  models.Move:
+    properties:
+      base_value:
+        type: integer
+      buff_amount:
+        type: integer
+      buff_turns:
+        type: integer
+      description:
+        type: string
+      effect:
+        description: '"damage" | "heal" | "buff" | "debuff"'
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      target_stat:
+        description: koji stat buffuje/debuffuje
+        type: string
+      type:
+        description: '"physical" | "magic"'
+        type: string
+    type: object
+  models.MoveResult:
+    properties:
+      buff_applied:
+        $ref: '#/definitions/models.ActiveBuff'
+      damage:
+        type: integer
+      healing:
+        type: integer
+      is_raging:
+        type: boolean
+      monster_tell:
+        $ref: '#/definitions/models.Move'
+      move:
+        $ref: '#/definitions/models.Move'
+      new_buffs:
+        items:
+          $ref: '#/definitions/models.ActiveBuff'
+        type: array
+    type: object
+  models.RunConfig:
+    properties:
+      all_moves:
+        items:
+          $ref: '#/definitions/models.Move'
+        type: array
+      hero_start_moves:
+        items:
+          $ref: '#/definitions/models.Move'
+        type: array
+      hero_start_stats:
+        $ref: '#/definitions/models.Stat'
+      monsters:
+        items:
+          $ref: '#/definitions/models.Monster'
+        type: array
+    type: object
+  models.Stat:
+    properties:
+      attack:
+        type: integer
+      defense:
+        type: integer
+      health:
+        type: integer
+      magic:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Backend za Nordeus Full Stack Challenge
+  title: RPG Gauntlet API
+  version: "1.0"
+paths:
+  /api/monster/move:
+    post:
+      consumes:
+      - application/json
+      description: Returns monster move based on current battle state
+      parameters:
+      - description: Current battle state
+        in: body
+        name: state
+        required: true
+        schema:
+          $ref: '#/definitions/models.BattleState'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MoveResult'
+      summary: Get monster's next move
+  /api/run/config:
+    get:
+      description: Returns full battle config for a new run
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RunConfig'
+      summary: Get run configuration
+swagger: "2.0"

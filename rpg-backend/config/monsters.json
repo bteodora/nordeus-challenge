@@ -1,0 +1,42 @@
+[
+  {
+    "id": "goblin_warrior",
+    "name": "Goblin Warrior",
+    "difficulty": 1,
+    "xp_reward": 50,
+    "stats": { "health": 60, "attack": 12, "defense": 5, "magic": 3 },
+    "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"]
+  },
+  {
+    "id": "goblin_mage",
+    "name": "Goblin Mage",
+    "difficulty": 2,
+    "xp_reward": 75,
+    "stats": { "health": 50, "attack": 5, "defense": 4, "magic": 15 },
+    "moves": ["firebolt", "arcane_surge", "mana_drain", "hex_shield"]
+  },
+  {
+    "id": "giant_spider",
+    "name": "Giant Spider",
+    "difficulty": 3,
+    "xp_reward": 100,
+    "stats": { "health": 80, "attack": 18, "defense": 10, "magic": 5 },
+    "moves": ["bite", "web_throw", "pounce", "skitter"]
+  },
+  {
+    "id": "witch",
+    "name": "Witch",
+    "difficulty": 4,
+    "xp_reward": 130,
+    "stats": { "health": 70, "attack": 8, "defense": 8, "magic": 22 },
+    "moves": ["shadow_bolt", "drain_life", "curse", "dark_pact"]
+  },
+  {
+    "id": "dragon",
+    "name": "Dragon",
+    "difficulty": 5,
+    "xp_reward": 200,
+    "stats": { "health": 120, "attack": 25, "defense": 18, "magic": 28 },
+    "moves": ["flame_breath", "claw_swipe", "intimidate", "dragon_scales"]
+  }
+]

@@ -1,0 +1,253 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Backend za Nordeus Full Stack Challenge",
+        "title": "RPG Gauntlet API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api",
+    "paths": {
+        "/api/monster/move": {
+            "post": {
+                "description": "Returns monster move based on current battle state",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get monster's next move",
+                "parameters": [
+                    {
+                        "description": "Current battle state",
+                        "name": "state",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BattleState"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MoveResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/run/config": {
+            "get": {
+                "description": "Returns full battle config for a new run",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get run configuration",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.RunConfig"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.ActiveBuff": {
+            "type": "object",
+            "properties": {
+                "affects_who": {
+                    "description": "\"hero\" | \"monster\"",
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "integer"
+                },
+                "target_stat": {
+                    "type": "string"
+                },
+                "turns_left": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.BattleState": {
+            "type": "object",
+            "properties": {
+                "active_buffs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ActiveBuff"
+                    }
+                },
+                "hero_hp": {
+                    "type": "integer"
+                },
+                "hero_max_hp": {
+                    "type": "integer"
+                },
+                "hero_stats": {
+                    "$ref": "#/definitions/models.Stat"
+                },
+                "monster_hp": {
+                    "type": "integer"
+                },
+                "monster_id": {
+                    "type": "string"
+                },
+                "monster_max_hp": {
+                    "type": "integer"
+                },
+                "monster_stats": {
+                    "$ref": "#/definitions/models.Stat"
+                },
+                "turn": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Monster": {
+            "type": "object",
+            "properties": {
+                "difficulty": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "moves": {
+                    "description": "← string ID-evi",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sprite": {
+                    "type": "string"
+                },
+                "stats": {
+                    "$ref": "#/definitions/models.Stat"
+                },
+                "xp_reward": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Move": {
+            "type": "object",
+            "properties": {
+                "base_value": {
+                    "type": "integer"
+                },
+                "buff_amount": {
+                    "type": "integer"
+                },
+                "buff_turns": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "effect": {
+                    "description": "\"damage\" | \"heal\" | \"buff\" | \"debuff\"",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "target_stat": {
+                    "description": "koji stat buffuje/debuffuje",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"physical\" | \"magic\"",
+                    "type": "string"
+                }
+            }
+        },
+        "models.MoveResult": {
+            "type": "object",
+            "properties": {
+                "buff_applied": {
+                    "$ref": "#/definitions/models.ActiveBuff"
+                },
+                "damage": {
+                    "type": "integer"
+                },
+                "healing": {
+                    "type": "integer"
+                },
+                "is_raging": {
+                    "type": "boolean"
+                },
+                "monster_tell": {
+                    "$ref": "#/definitions/models.Move"
+                },
+                "move": {
+                    "$ref": "#/definitions/models.Move"
+                },
+                "new_buffs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ActiveBuff"
+                    }
+                }
+            }
+        },
+        "models.RunConfig": {
+            "type": "object",
+            "properties": {
+                "all_moves": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Move"
+                    }
+                },
+                "hero_start_moves": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Move"
+                    }
+                },
+                "hero_start_stats": {
+                    "$ref": "#/definitions/models.Stat"
+                },
+                "monsters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Monster"
+                    }
+                }
+            }
+        },
+        "models.Stat": {
+            "type": "object",
+            "properties": {
+                "attack": {
+                    "type": "integer"
+                },
+                "defense": {
+                    "type": "integer"
+                },
+                "health": {
+                    "type": "integer"
+                },
+                "magic": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

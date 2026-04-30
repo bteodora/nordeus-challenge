@@ -1,3 +1,5 @@
+package models
+
 type Stat struct {
     Health  int `json:"health"`
     Attack  int `json:"attack"`
@@ -18,13 +20,14 @@ type Move struct {
 }
 
 type Monster struct {
-    ID       string `json:"id"`
-    Name     string `json:"name"`
-    Sprite   string `json:"sprite"`
-    Stats    Stat   `json:"stats"`
-    Moves    []Move `json:"moves"`
-    XPReward int    `json:"xp_reward"`
-    Difficulty int  `json:"difficulty"` // 1-5 za map preview
+    ID         string   `json:"id"`
+    Name       string   `json:"name"`
+    Sprite     string   `json:"sprite"`
+    Stats      Stat     `json:"stats"`
+    MoveIDs    []string `json:"moves"`     // ← string ID-evi
+    Moves      []Move   `json:"-"`         // ← populate pri load-u, ne serializuj
+    XPReward   int      `json:"xp_reward"`
+    Difficulty int      `json:"difficulty"`
 }
 
 type BattleState struct {
@@ -44,4 +47,21 @@ type ActiveBuff struct {
     Amount      int    `json:"amount"`
     TurnsLeft   int    `json:"turns_left"`
     AffectsWho  string `json:"affects_who"` // "hero" | "monster"
+}
+
+type MoveResult struct {
+    Move        Move         `json:"move"`
+    Damage      int          `json:"damage"`
+    Healing     int          `json:"healing"`
+    BuffApplied *ActiveBuff  `json:"buff_applied,omitempty"`
+    NewBuffs    []ActiveBuff `json:"new_buffs"`
+    MonsterTell *Move        `json:"monster_tell,omitempty"`
+    IsRaging    bool         `json:"is_raging"`
+}
+
+type RunConfig struct {
+    Monsters []Monster `json:"monsters"`
+    AllMoves []Move    `json:"all_moves"`
+    HeroStartStats Stat `json:"hero_start_stats"`
+    HeroStartMoves []Move `json:"hero_start_moves"`
 }
