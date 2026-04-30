@@ -1,28 +1,20 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion' // OVO JE FALILO
-import './App.css'
+import { useGameStore } from './store/gamestore'
+import MainMenu from './components/screens/MainMenu'
+import MapScreen from './components/screens/MapScreen'
+import BattleScreen from './components/screens/BattleScreen'
+import PostBattleScreen from './components/screens/PostBattleScreen'
+// import SummaryScreen from './screens/SummaryScreen' // Za kasnije
 
 function App() {
-  const [count, setCount] = useState(0)
+  const screen = useGameStore((state) => state.screen)
 
   return (
-    // Koristimo <div> umesto <> jer Tailwind h-screen treba roditeljski element
-    <div className="flex h-screen items-center justify-center bg-slate-900">
-      <motion.div 
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="rounded-lg bg-[#87a96b] p-10 shadow-2xl" // Zamenio sam ghibli-grass sa hex kodom dok ga ne dodaš u config
-      >
-        <h1 className="text-3xl font-bold text-white mb-4">RPG Setup spreman! ⚔️</h1>
-        
-        <button 
-          onClick={() => setCount((count) => count + 1)}
-          className="px-4 py-2 bg-white rounded-md font-bold text-slate-900 hover:bg-slate-200 transition-colors"
-        >
-          Level: {count}
-        </button>
-      </motion.div>
+    <div className="w-full h-screen bg-gray-900 text-white overflow-hidden font-sans">
+      {screen === 'menu' && <MainMenu />}
+      {screen === 'map' && <MapScreen />}
+      {screen === 'battle' && <BattleScreen />}
+      {screen === 'postbattle' && <PostBattleScreen />}
+      {/* {screen === 'summary' && <SummaryScreen />} */}
     </div>
   )
 }

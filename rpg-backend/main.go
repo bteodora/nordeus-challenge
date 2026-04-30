@@ -20,7 +20,7 @@ func main() {
     r := gin.Default()
 
     r.Use(cors.New(cors.Config{
-        AllowOrigins:     []string{"http://localhost:5173"},
+        AllowOrigins:     []string{"http://localhost:5173", "http://localhost:5174"},
         AllowMethods:     []string{"GET", "POST", "OPTIONS"},
         AllowHeaders:     []string{"Content-Type"},
     }))
@@ -31,5 +31,5 @@ func main() {
     api.GET("/run/config", handlers.GetRunConfig)
     api.POST("/monster/move", handlers.GetMonsterMove)
 
-    r.Run(":8080")
+    r.Run(":8081")
 }
