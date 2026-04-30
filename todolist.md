@@ -3,8 +3,8 @@ OSNOVNI KLIJENT (UI)
 [~] Main Menu: Dugme za izlaz iz igre - dugme postoji, ali nije povezano sa nikakvom akcijom 
 [x] Run Map: Vizuelni prikaz svih 5 predstojećih protivnika 
 [x] Run Map: Opcija za ulazak u selektovanu borbu 
-[~] Move Management: Ekran za pregled svih naučenih poteza - naučeni potezi postoje u state-u i prikazuju se nakon borbe, ali nema posebnog move management ekrana 
-[~] Move Management: Sistem za opremanje/izmenu (swap) poteza pre borbe - swap radi iz post-battle ekrana, ali nema posebnog pre-battle ekrana 
+[X] Move Management: Ekran za pregled svih naučenih poteza - naučeni potezi postoje u state-u i prikazuju se nakon borbe, ali nema posebnog move management ekrana 
+[X] Move Management: Sistem za opremanje/izmenu (swap) poteza pre borbe - swap radi iz post-battle ekrana, ali nema posebnog pre-battle ekrana 
 [x] Battle Screen: Vizuelni prikaz heroja i čudovišta 
 [x] Battle Screen: Prikaz HP bara za oba karaktera 
 [x] Battle Screen: Interfejs za biranje poteza (hero turn) 

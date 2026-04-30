@@ -72,11 +72,8 @@ export async function fetchRunConfig(): Promise<RunConfig> {
 }
 
 export async function fetchMonsterMove(state: BattleState): Promise<MoveResult> {
-  const res = await fetch(`${BASE_URL}/monster/move`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(state),
-  })
+  const params = new URLSearchParams({ state: JSON.stringify(state) })
+  const res = await fetch(`${BASE_URL}/monster/move?${params.toString()}`)
   if (!res.ok) throw new Error('Failed to fetch monster move')
   return res.json()
 }

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
 import type { Move } from '../../api/client'
 import { MonsterTell } from '../ui/MonsterTell'

@@ -16,24 +16,19 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/monster/move": {
-            "post": {
+            "get": {
                 "description": "Returns monster move based on current battle state",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
                 "summary": "Get monster's next move",
                 "parameters": [
                     {
-                        "description": "Current battle state",
+                        "type": "string",
+                        "description": "Current battle state as JSON",
                         "name": "state",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.BattleState"
-                        }
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -83,41 +78,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.BattleState": {
-            "type": "object",
-            "properties": {
-                "active_buffs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ActiveBuff"
-                    }
-                },
-                "hero_hp": {
-                    "type": "integer"
-                },
-                "hero_max_hp": {
-                    "type": "integer"
-                },
-                "hero_stats": {
-                    "$ref": "#/definitions/models.Stat"
-                },
-                "monster_hp": {
-                    "type": "integer"
-                },
-                "monster_id": {
-                    "type": "string"
-                },
-                "monster_max_hp": {
-                    "type": "integer"
-                },
-                "monster_stats": {
-                    "$ref": "#/definitions/models.Stat"
-                },
-                "turn": {
-                    "type": "integer"
-                }
-            }
-        },
         "models.Monster": {
             "type": "object",
             "properties": {
@@ -128,7 +88,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "moves": {
-                    "description": "← string ID-evi",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -273,4 +232,3 @@ var SwaggerInfo = &swag.Spec{
 func init() {
 	swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
 }
-

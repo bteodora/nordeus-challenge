@@ -1,39 +1,46 @@
 package handlers
 
 import (
-    "github.com/gin-gonic/gin"
-    "rpg-backend/engine"
-    "rpg-backend/models"
+	"encoding/json"
+
+	"github.com/gin-gonic/gin"
+	"rpg-backend/engine"
+	"rpg-backend/models"
 )
 
 // @Summary Get monster's next move
 // @Description Returns monster move based on current battle state
-// @Accept json
 // @Produce json
-// @Param state body models.BattleState true "Current battle state"
+// @Param state query string true "Current battle state as JSON"
 // @Success 200 {object} models.MoveResult
-// @Router /api/monster/move [post]
+// @Router /api/monster/move [get]
 func GetMonsterMove(c *gin.Context) {
-    var state models.BattleState
-    if err := c.ShouldBindJSON(&state); err != nil {
-        c.JSON(400, gin.H{"error": "invalid battle state: " + err.Error()})
-        return
-    }
+	stateRaw := c.Query("state")
+	if stateRaw == "" {
+		c.JSON(400, gin.H{"error": "missing required query param: state"})
+		return
+	}
 
-    config := engine.LoadConfig()
-    monster := engine.FindMonster(state.MonsterID, config)
-    if monster == nil {
-        c.JSON(404, gin.H{"error": "monster not found: " + state.MonsterID})
-        return
-    }
+	var state models.BattleState
+	if err := json.Unmarshal([]byte(stateRaw), &state); err != nil {
+		c.JSON(400, gin.H{"error": "invalid battle state json: " + err.Error()})
+		return
+	}
 
-    // AI bira potez
-    move := engine.PickMonsterMove(*monster, state)
-    // Resolvi potez u rezultat
-    result := engine.ResolveMove(move, state, "monster")
-    // Prefetch sledeci potez za MonsterTell
-    nextMove := engine.PickMonsterMove(*monster, state)
-    result.MonsterTell = &nextMove
+	config := engine.LoadConfig()
+	monster := engine.FindMonster(state.MonsterID, config)
+	if monster == nil {
+		c.JSON(404, gin.H{"error": "monster not found: " + state.MonsterID})
+		return
+	}
 
-    c.JSON(200, result)
+	// AI bira potez
+	move := engine.PickMonsterMove(*monster, state)
+	// Resolvi potez u rezultat
+	result := engine.ResolveMove(move, state, "monster")
+	// Prefetch sledeci potez za MonsterTell
+	nextMove := engine.PickMonsterMove(*monster, state)
+	result.MonsterTell = &nextMove
+
+	c.JSON(200, result)
 }

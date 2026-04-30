@@ -1,14 +1,14 @@
 package main
 
 import (
-    "rpg-backend/handlers"
+	"rpg-backend/handlers"
 
-    "github.com/gin-contrib/cors"
-    "github.com/gin-gonic/gin"
-    swaggerFiles "github.com/swaggo/files"
-    ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
-    _ "rpg-backend/docs" // generisano od swaggo
+	_ "rpg-backend/docs" // generisano od swaggo
 )
 
 // @title RPG Gauntlet API
@@ -17,19 +17,19 @@ import (
 // @host localhost:8080
 // @BasePath /api
 func main() {
-    r := gin.Default()
+	r := gin.Default()
 
-    r.Use(cors.New(cors.Config{
-        AllowOrigins:     []string{"http://localhost:5173", "http://localhost:5174"},
-        AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-        AllowHeaders:     []string{"Content-Type"},
-    }))
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:5173", "http://localhost:5174"},
+		AllowMethods: []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders: []string{"Content-Type"},
+	}))
 
-    r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-    api := r.Group("/api")
-    api.GET("/run/config", handlers.GetRunConfig)
-    api.POST("/monster/move", handlers.GetMonsterMove)
+	api := r.Group("/api")
+	api.GET("/run/config", handlers.GetRunConfig)
+	api.GET("/monster/move", handlers.GetMonsterMove)
 
-    r.Run(":8081")
+	r.Run(":8081")
 }

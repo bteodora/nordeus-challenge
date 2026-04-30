@@ -8,7 +8,6 @@ export default function PostBattleScreen() {
     didWinBattle,
     newlyLearnedMove,
     hero,
-    learnedMoves,
     equippedMoves,
     runStats,
     goToMap,

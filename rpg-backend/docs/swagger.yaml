@@ -12,29 +12,6 @@ definitions:
       turns_left:
         type: integer
     type: object
-  models.BattleState:
-    properties:
-      active_buffs:
-        items:
-          $ref: '#/definitions/models.ActiveBuff'
-        type: array
-      hero_hp:
-        type: integer
-      hero_max_hp:
-        type: integer
-      hero_stats:
-        $ref: '#/definitions/models.Stat'
-      monster_hp:
-        type: integer
-      monster_id:
-        type: string
-      monster_max_hp:
-        type: integer
-      monster_stats:
-        $ref: '#/definitions/models.Stat'
-      turn:
-        type: integer
-    type: object
   models.Monster:
     properties:
       difficulty:
@@ -42,7 +19,6 @@ definitions:
       id:
         type: string
       moves:
-        description: ← string ID-evi
         items:
           type: string
         type: array
@@ -134,17 +110,14 @@ info:
   version: "1.0"
 paths:
   /api/monster/move:
-    post:
-      consumes:
-      - application/json
+    get:
       description: Returns monster move based on current battle state
       parameters:
-      - description: Current battle state
-        in: body
+      - description: Current battle state as JSON
+        in: query
         name: state
         required: true
-        schema:
-          $ref: '#/definitions/models.BattleState'
+        type: string
       produces:
       - application/json
       responses:

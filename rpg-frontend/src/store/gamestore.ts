@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { fetchRunConfig, fetchMonsterMove } from '../api/client'
+import { fetchMonsterMove, fetchRunConfig } from '../api/client'
 import type {
   RunConfig,
   Monster,
@@ -7,7 +7,6 @@ import type {
   BattleState,
   ActiveBuff,
   Stat,
-  MoveResult,
 } from '../api/client'
 
 export interface Hero {
@@ -176,8 +175,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newLog: LogEntry[] = []
     let stats = { ...runStats }
 
-    // --- Hero turn ---
-    // Računamo logiku za potez heroja na frontendu da bismo odmah ažurirali state
+    // Hero turn (client primenjuje svoj potez)
     const heroAtk = getEffectiveStat(state.hero_stats.attack, 'attack', state.active_buffs, 'hero')
     const heroMag = getEffectiveStat(state.hero_stats.magic, 'magic', state.active_buffs, 'hero')
     const monDef = getEffectiveStat(state.monster_stats.defense, 'defense', state.active_buffs, 'monster')
@@ -223,49 +221,44 @@ export const useGameStore = create<GameStore>((set, get) => ({
     newLog.push({ turn: state.turn, actor: 'hero', moveName: move.name, damage: heroDamage || undefined, healing: heroHealing || undefined })
 
     addDamageNumber(heroDamage, 'damage', 'monster')
-    if (heroHealing) addDamageNumber(heroHealing, 'heal', 'hero')
+    if (heroHealing > 0) addDamageNumber(heroHealing, 'heal', 'hero')
 
-    // Proveri da li je monster mrtav nakon herojevog poteza
     if (state.monster_hp <= 0) {
+      stats.totalTurns += 1
       return handleVictory(state, monster, stats, newLog, set, get)
     }
 
-    // --- Monster turn ---
-    // Šaljemo state serveru, a on vraća kompletan rezultat poteza monstera
+    // Monster turn (server bira i racuna monster potez)
     const monsterResult = await fetchMonsterMove(state)
-    const monMove = monsterResult.move
 
-    // Server je već izračunao štetu, lečenje i buffove. Mi ih samo primenjujemo.
-    const monDamage = monsterResult.damage
-    const monHealing = monsterResult.healing
-
-    if (monDamage > 0) {
-      // Dark Pact nanosi štetu samom monsteru, a ne heroju
-      if (monMove.effect === 'buff_self_damage') {
-        state.monster_hp = Math.max(0, state.monster_hp - monDamage);
+    if (monsterResult.damage > 0) {
+      if (monsterResult.move.effect === 'buff_self_damage') {
+        state.monster_hp = Math.max(0, state.monster_hp - monsterResult.damage)
+        addDamageNumber(monsterResult.damage, 'damage', 'monster')
       } else {
-        state.hero_hp = Math.max(0, state.hero_hp - monDamage)
-        stats.totalDamageReceived += monDamage
+        state.hero_hp = Math.max(0, state.hero_hp - monsterResult.damage)
+        stats.totalDamageReceived += monsterResult.damage
+        addDamageNumber(monsterResult.damage, 'damage', 'hero')
       }
     }
-    if (monHealing > 0) {
-      state.monster_hp = Math.min(state.monster_max_hp, state.monster_hp + monHealing)
+    if (monsterResult.healing > 0) {
+      state.monster_hp = Math.min(state.monster_max_hp, state.monster_hp + monsterResult.healing)
+      addDamageNumber(monsterResult.healing, 'heal', 'monster')
     }
-    
-    // Dodajemo nove buffove koje je server primenio
+
     state.active_buffs = [...state.active_buffs, ...monsterResult.new_buffs]
-    
-    newLog.push({ turn: state.turn, actor: 'monster', moveName: monMove.name, damage: monDamage || undefined, healing: monHealing || undefined })
-    addDamageNumber(monDamage, 'damage', 'hero') // TODO: Handle self-damage display
-    if(monHealing) addDamageNumber(monHealing, 'heal', 'monster')
+    newLog.push({
+      turn: state.turn,
+      actor: 'monster',
+      moveName: monsterResult.move.name,
+      damage: monsterResult.damage || undefined,
+      healing: monsterResult.healing || undefined,
+    })
 
-
-    // Tick buffove na kraju celog kruga (i heroj i monster su odigrali)
     state.active_buffs = tickBuffs(state.active_buffs)
     state.turn += 1
     stats.totalTurns += 1
 
-    // Proveri da li je hero mrtav
     if (state.hero_hp <= 0) {
       set({
         battleState: state,
@@ -374,7 +367,7 @@ function handleVictory(state: BattleState, monster: Monster, stats: RunStats, lo
 
 function getEffectiveStat(base: number, stat: string, buffs: ActiveBuff[], who: string): number {
   return buffs
-    .filter(b => b.affects_who === who && b.target_stat === stat)
+    .filter((b) => b.affects_who === who && b.target_stat === stat)
     .reduce((acc, b) => acc + b.amount, base)
 }
 
@@ -393,12 +386,10 @@ function calcHeal(mag: number, base: number): number {
 }
 
 function tickBuffs(buffs: ActiveBuff[]): ActiveBuff[] {
-  // Prvo smanji trajanje
-  const tickedBuffs = buffs.map(b => ({ ...b, turns_left: b.turns_left - 1 }));
-  // Onda filtriraj one koji su istekli
-  return tickedBuffs.filter(b => b.turns_left > 0);
+  return buffs
+    .map((b) => ({ ...b, turns_left: b.turns_left - 1 }))
+    .filter((b) => b.turns_left > 0)
 }
-
 
 function addDamageNumber(_value: number, _type: 'damage' | 'heal' | 'buff', _target: 'hero' | 'monster') {
   // Ova funkcija je ostavljena prazna jer se logika za prikaz brojeva

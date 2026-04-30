@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
+import type { ReactNode } from 'react'
 import type { Move } from '../../api/client'
 import { Swords, Shield, Heart, Zap, X } from 'lucide-react'
 
@@ -10,7 +11,7 @@ interface MoveManagementModalProps {
   onEquipMove: (move: Move, slot: number) => void
 }
 
-const effectIcons: { [key: string]: JSX.Element } = {
+const effectIcons: Record<string, ReactNode> = {
   damage: <Swords size={16} />,
   heal: <Heart size={16} />,
   buff: <Shield size={16} />,
@@ -26,13 +27,6 @@ export function MoveManagementModal({
   equippedMoves,
   onEquipMove,
 }: MoveManagementModalProps) {
-  const isEquipped = (move: Move, slot?: number) => {
-    if (slot !== undefined) {
-      return equippedMoves[slot]?.id === move.id
-    }
-    return equippedMoves.some((m) => m.id === move.id)
-  }
-
   return (
     <AnimatePresence>
       {isOpen && (

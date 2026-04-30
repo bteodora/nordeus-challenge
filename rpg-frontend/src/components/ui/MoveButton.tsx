@@ -1,5 +1,5 @@
-import React from 'react'
 import { motion } from 'framer-motion'
+import type { ReactNode } from 'react'
 import type { Move } from '../../api/client'
 import { Swords, Shield, Heart, Zap } from 'lucide-react'
 
@@ -9,7 +9,7 @@ interface MoveButtonProps {
   disabled: boolean
 }
 
-const effectIcons: { [key: string]: JSX.Element } = {
+const effectIcons: Record<string, ReactNode> = {
   damage: <Swords size={16} />,
   heal: <Heart size={16} />,
   buff: <Shield size={16} />,
