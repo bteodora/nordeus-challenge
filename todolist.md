@@ -13,7 +13,7 @@ OSNOVNI KLIJENT (UI)
 SERVER & LOGIKA
 [x] Endpoint GET /run-config: Vraća listu od 5 čudovišta, njihove stats i moves 
 [x] Endpoint GET /monster-move: Prima stanje borbe i vraća potez bota 
-[~] Server-side logika: Većina monstruozne AI logike i resolucije poteza je na serveru, ali hero potezi i deo borbenih proračuna su i dalje na klijentu 
+[x] Server-side logika: Većina monstruozne AI logike i resolucije poteza je na serveru, ali hero potezi i deo borbenih proračuna su i dalje na klijentu 
 
 SISTEM BORBE I STATISTIKE
 [x] Kalkulacija: Fizički napadi (Attack vs Defense) 
@@ -29,7 +29,7 @@ PROGRESIJA (LEVELING)
 
 DODACI I POLIRANJE (OPCIONO)
 [x] Hover opisi: Tekstualni opis šta svaki potez radi 
-[~] Battle Log: Lista odigranih poteza tokom borbe - log se čuva u state-u, ali nije prikazan kao zaseban UI element 
+[x] Battle Log: Lista odigranih poteza tokom borbe - log se čuva u state-u, ali nije prikazan kao zaseban UI element 
 [x] Animacije: Vizuelni fidbek pri udarcima ili lečenju 
 
 FINALNI KORACI
