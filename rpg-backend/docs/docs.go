@@ -268,10 +268,9 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Backend za Nordeus Full Stack Challenge",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
 }
 
 func init() {
 	swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
 }
+

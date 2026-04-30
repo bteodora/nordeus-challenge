@@ -1,6 +1,9 @@
 package engine
 
-import "math"
+import (
+	"math"
+	"rpg-backend/models"
+)
 
 // Physical damage: skalira sa Attack, redukuje Defense
 func CalcPhysicalDamage(attackerAtk, defenderDef, baseValue int) int {
