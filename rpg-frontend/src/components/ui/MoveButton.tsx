@@ -1,3 +1,4 @@
+import React from 'react'
 import { motion } from 'framer-motion'
 import type { Move } from '../../api/client'
 import { Swords, Shield, Heart, Zap } from 'lucide-react'

@@ -1,14 +1,18 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
 import { Swords, Shield } from 'lucide-react'
+import { MoveManagementModal } from '../ui/MoveManagementModal'
 
 export default function MapScreen() {
-  const { config, currentEncounterIndex, enterBattle, hero, equippedMoves } = useGameStore()
+  const { config, currentEncounterIndex, enterBattle, hero, equippedMoves, learnedMoves, equipMove } = useGameStore()
+  const [isManageMovesOpen, setIsManageMovesOpen] = useState(false)
 
   if (!config) return <div>Loading...</div>
 
   return (
-    <div className="flex w-full h-full p-6 gap-6 bg-gray-900">
+    <>
+      <div className="flex w-full h-full p-6 gap-6 bg-gray-900">
       
       {/* Sidebar: Hero Info */}
       <div className="w-1/4 bg-gray-800 rounded-2xl p-6 border border-gray-700 flex flex-col">
@@ -28,7 +32,9 @@ export default function MapScreen() {
           ))}
         </div>
         
-        <button className="mt-4 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-colors">
+        <button 
+          onClick={() => setIsManageMovesOpen(true)}
+          className="mt-4 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-colors">
           Manage Moves (M)
         </button>
       </div>
@@ -83,5 +89,14 @@ export default function MapScreen() {
       </div>
 
     </div>
+
+    <MoveManagementModal
+      isOpen={isManageMovesOpen}
+      onClose={() => setIsManageMovesOpen(false)}
+      allMoves={learnedMoves}
+      equippedMoves={equippedMoves}
+      onEquipMove={equipMove}
+    />
+    </>
   )
 }

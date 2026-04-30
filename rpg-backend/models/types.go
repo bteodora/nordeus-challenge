@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 type Stat struct {
     Health  int `json:"health"`
     Attack  int `json:"attack"`
@@ -24,8 +26,8 @@ type Monster struct {
     Name       string   `json:"name"`
     Sprite     string   `json:"sprite"`
     Stats      Stat     `json:"stats"`
-    MoveIDs    []string `json:"moves"`     // ← string ID-evi
-    Moves      []Move   `json:"-"`         // ← populate pri load-u, ne serializuj
+    MoveIDs    []string `json:"moves"`
+    Moves      []Move   `json:"-"`
     XPReward   int      `json:"xp_reward"`
     Difficulty int      `json:"difficulty"`
 }
@@ -57,6 +59,19 @@ type MoveResult struct {
     NewBuffs    []ActiveBuff `json:"new_buffs"`
     MonsterTell *Move        `json:"monster_tell,omitempty"`
     IsRaging    bool         `json:"is_raging"`
+}
+
+// MarshalJSON customizuje JSON output da koristi Moves umesto MoveIDs
+func (m Monster) MarshalJSON() ([]byte, error) {
+    return json.Marshal(map[string]interface{}{
+        "id":          m.ID,
+        "name":        m.Name,
+        "sprite":      m.Sprite,
+        "stats":       m.Stats,
+        "moves":       m.Moves,
+        "xp_reward":   m.XPReward,
+        "difficulty":  m.Difficulty,
+    })
 }
 
 type RunConfig struct {

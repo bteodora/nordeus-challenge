@@ -296,8 +296,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ equippedMoves: equipped })
   },
 
-  continueAfterBattle: () => set({ screen: 'map' }),
-  goToMap: () => set({ screen: 'map' }),
+  continueAfterBattle: () => {
+    const { didWinBattle, currentEncounterIndex } = get()
+    if (didWinBattle && currentEncounterIndex < 4) {
+      // Unlock next monster after victory
+      set({ screen: 'map', currentEncounterIndex: currentEncounterIndex + 1 })
+    } else {
+      set({ screen: 'map' })
+    }
+  },
+  goToMap: () => {
+    const { didWinBattle, currentEncounterIndex } = get()
+    if (didWinBattle && currentEncounterIndex < 4) {
+      // Unlock next monster after victory
+      set({ screen: 'map', currentEncounterIndex: currentEncounterIndex + 1 })
+    } else {
+      set({ screen: 'map' })
+    }
+  },
 }))
 
 // --- Helpers ---
