@@ -19,6 +19,8 @@ type Move struct {
 	BuffAmount  int    `json:"buff_amount"`
 	BuffTurns   int    `json:"buff_turns"`
 	Description string `json:"description"`
+	HPCost      int    `json:"hp_cost,omitempty"`
+	ManaCost    int    `json:"mana_cost,omitempty"`
 }
 
 type Monster struct {

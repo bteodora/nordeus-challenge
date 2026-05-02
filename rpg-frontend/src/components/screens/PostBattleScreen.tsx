@@ -60,6 +60,29 @@ export default function PostBattleScreen() {
                 <p className="text-lg font-bold text-blue-400">{hero.level}</p>
               </div>
             </div>
+            {runStats.lastStatGains && (
+              <div className="mt-4 pt-4 border-t border-gray-700">
+                <p className="text-gray-400 text-xs uppercase mb-2">⭐ Stats Improved</p>
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  <div>
+                    <p className="text-gray-500">Health</p>
+                    <p className="text-green-400 font-bold">+{runStats.lastStatGains.health}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Attack</p>
+                    <p className="text-red-400 font-bold">+{runStats.lastStatGains.attack}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Defense</p>
+                    <p className="text-blue-400 font-bold">+{runStats.lastStatGains.defense}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Magic</p>
+                    <p className="text-purple-400 font-bold">+{runStats.lastStatGains.magic}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
 
           {/* New Move Section */}

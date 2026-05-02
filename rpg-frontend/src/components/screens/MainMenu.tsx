@@ -1,9 +1,25 @@
 import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
-import { Play, Settings, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Play, Settings, X, RotateCcw } from 'lucide-react'
 
 export default function MainMenu() {
   const startNewRun = useGameStore((state) => state.startNewRun)
+  const loadRun = useGameStore((state) => state.loadRun)
+  const [hasSave, setHasSave] = useState(false)
+
+  useEffect(() => {
+    // Proveravamo da li postoji sačuvani run
+    const raw = localStorage.getItem('rpg_save')
+    setHasSave(!!raw)
+  }, [])
+
+  const handleResume = async () => {
+    const success = await loadRun()
+    if (!success) {
+      alert('Failed to load save')
+    }
+  }
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black">
@@ -31,6 +47,14 @@ export default function MainMenu() {
         >
           <Play size={20} /> START RUN
         </button>
+        {hasSave && (
+          <button
+            onClick={handleResume}
+            className="flex items-center justify-center gap-2 py-3 px-6 bg-green-700 hover:bg-green-600 text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
+          >
+            <RotateCcw size={20} /> RESUME
+          </button>
+        )}
         <button className="flex items-center justify-center gap-2 py-3 px-6 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl transition-all">
           <Settings size={20} /> SETTINGS
         </button>

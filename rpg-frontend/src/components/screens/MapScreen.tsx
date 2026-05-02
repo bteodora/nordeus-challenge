@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
-import { Swords, Shield } from 'lucide-react'
+import { Swords, Shield, Eye } from 'lucide-react'
 import { MoveManagementModal } from '../ui/MoveManagementModal'
 import ShopModal from '../ui/ShopModal'
+import { MonsterPreviewModal } from '../ui/MonsterPreviewModal'
+import type { Monster } from '../../api/client'
 
 export default function MapScreen() {
   const { config, currentEncounterIndex, enterBattle, hero, equippedMoves, learnedMoves, equipMove, coins } = useGameStore()
   const [isManageMovesOpen, setIsManageMovesOpen] = useState(false)
   const [isShopOpen, setIsShopOpen] = useState(false)
+  const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null)
 
   if (!config) return <div>Loading...</div>
 
@@ -77,7 +80,7 @@ export default function MapScreen() {
                 className={cardClass}
                 onClick={() => isCurrent && enterBattle(index)}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-1">
                   <div className="text-4xl">{isPast ? '💀' : '👹'}</div>
                   <div>
                     <h3 className={`font-bold ${isCurrent ? 'text-white' : 'text-gray-400'}`}>{monster.name}</h3>
@@ -86,23 +89,32 @@ export default function MapScreen() {
                     </div>
                   </div>
                 </div>
-                {isCurrent && (
-                  <button className="px-4 py-2 bg-red-600 rounded-lg font-bold flex items-center gap-2">
-                    <Swords size={16} /> FIGHT
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedMonster(monster); }}
+                    className="p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors" 
+                    title="Preview"
+                  >
+                    <Eye size={16} className="text-white" />
                   </button>
-                )}
-                {isPast && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-500 font-bold">DEFEATED</span>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); enterBattle(index, true); }}
-                      className="px-3 py-1 bg-amber-600 hover:bg-amber-500 rounded font-bold text-sm"
-                    >
-                      Replay
+                  {isCurrent && (
+                    <button className="px-4 py-2 bg-red-600 rounded-lg font-bold flex items-center gap-2">
+                      <Swords size={16} /> FIGHT
                     </button>
-                  </div>
-                )}
-                {isLocked && <span className="text-gray-600 font-bold">LOCKED</span>}
+                  )}
+                  {isPast && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-500 font-bold">DEFEATED</span>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); enterBattle(index, true); }}
+                        className="px-3 py-1 bg-amber-600 hover:bg-amber-500 rounded font-bold text-sm"
+                      >
+                        Replay
+                      </button>
+                    </div>
+                  )}
+                  {isLocked && <span className="text-gray-600 font-bold">LOCKED</span>}
+                </div>
               </motion.div>
             )
           })}
@@ -122,6 +134,8 @@ export default function MapScreen() {
       onEquipMove={equipMove}
     />
     <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} />
+    <MonsterPreviewModal isOpen={!!selectedMonster} onClose={() => setSelectedMonster(null)} monster={selectedMonster} />
+    <MonsterPreviewModal isOpen={!!selectedMonster} onClose={() => setSelectedMonster(null)} monster={selectedMonster} />
     </>
   )
 }

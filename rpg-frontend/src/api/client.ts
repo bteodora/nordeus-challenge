@@ -17,6 +17,8 @@ export interface Move {
   buff_amount: number
   buff_turns: number
   description: string
+  hp_cost?: number
+  mana_cost?: number
 }
 
 export interface Monster {

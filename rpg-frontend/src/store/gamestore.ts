@@ -24,6 +24,7 @@ export interface LogEntry {
   damage?: number
   healing?: number
   buffDesc?: string
+  timestamp?: number // Unix milliseconds when the action was taken
 }
 
 export interface DamageNumber {
@@ -43,6 +44,7 @@ export interface RunStats {
   timesLeveled: number
   movesLearned: string[]
   outcome: 'victory' | 'defeat' | null
+  lastStatGains?: { health: number; attack: number; defense: number; magic: number }
 }
 
 const XP_TABLE = [0, 100, 250, 450, 700, 1000]
@@ -83,13 +85,13 @@ interface GameStore {
 
   // Actions
   startNewRun: () => Promise<void>
+  loadRun: () => Promise<boolean>
   enterBattle: (index: number, isReplay?: boolean) => void
   selectMove: (move: Move) => Promise<void>
   equipMove: (move: Move, slot: number) => void
   continueAfterBattle: () => void
   goToMap: () => void
   saveRun: () => void
-  loadRun: () => boolean
   exitToMenu: () => void
 }
 
@@ -145,19 +147,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
       console.warn('Failed to save:', e)
     }
   },
-  loadRun: () => {
+  loadRun: async () => {
     try {
       const raw = localStorage.getItem('rpg_save')
       if (!raw) return false
       const parsed = JSON.parse(raw)
+      
+      // Učitaj config sa servera
+      const config = await fetchRunConfig()
+      
       set({
+        config,
         hero: parsed.hero || get().hero,
         learnedMoves: parsed.learnedMoves || get().learnedMoves,
         equippedMoves: parsed.equippedMoves || get().equippedMoves,
         currentEncounterIndex: parsed.currentEncounterIndex || get().currentEncounterIndex,
         coins: parsed.coins || get().coins,
         runStats: parsed.runStats || get().runStats,
-        screen: parsed.screen || get().screen,
+        screen: 'map',
       })
       return true
     } catch (e) {
@@ -275,7 +282,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     state.active_buffs = [...state.active_buffs, ...heroNewBuffs]
-    newLog.push({ turn: state.turn, actor: 'hero', moveName: move.name, damage: heroDamage || undefined, healing: heroHealing || undefined })
+    newLog.push({ turn: state.turn, actor: 'hero', moveName: move.name, damage: heroDamage || undefined, healing: heroHealing || undefined, timestamp: Date.now() })
 
     addDamageNumber(heroDamage, 'damage', 'monster')
     if (heroHealing > 0) addDamageNumber(heroHealing, 'heal', 'hero')
@@ -310,6 +317,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       moveName: monsterResult.move.name,
       damage: monsterResult.damage || undefined,
       healing: monsterResult.healing || undefined,
+      timestamp: Date.now(),
     })
 
     state.active_buffs = tickBuffs(state.active_buffs)
@@ -401,6 +409,7 @@ async function handleVictory(state: BattleState, monster: Monster, stats: RunSta
   const newXP = oldHero.xp + monster.xp_reward
   let newHero = { ...oldHero, xp: newXP }
   let timesLeveled = 0
+  let levelUpStats = { health: 0, attack: 0, defense: 0, magic: 0 }
 
   while (newHero.level < 5 && newXP >= XP_TABLE[newHero.level]) {
     newHero.level += 1
@@ -410,6 +419,10 @@ async function handleVictory(state: BattleState, monster: Monster, stats: RunSta
       defense: newHero.stats.defense + STAT_GAINS.defense,
       magic: newHero.stats.magic + STAT_GAINS.magic,
     }
+    levelUpStats.health += STAT_GAINS.health
+    levelUpStats.attack += STAT_GAINS.attack
+    levelUpStats.defense += STAT_GAINS.defense
+    levelUpStats.magic += STAT_GAINS.magic
     newHero.maxHp = newHero.stats.health
     // Oporavi malo HP pri level up-u, ali ne puni do kraja
     newHero.currentHp = Math.min(newHero.maxHp, state.hero_hp + STAT_GAINS.health) 
@@ -459,6 +472,7 @@ async function handleVictory(state: BattleState, monster: Monster, stats: RunSta
       timesLeveled: stats.timesLeveled + timesLeveled,
       movesLearned: (isReplay || alreadyLearned) ? stats.movesLearned : [...stats.movesLearned, randomMove!.name],
       outcome: isLastMonster ? 'victory' : null,
+      lastStatGains: timesLeveled > 0 ? levelUpStats : undefined,
     },
     coins: get().coins + coinsGained,
     screen: isLastMonster ? 'summary' : 'postbattle',

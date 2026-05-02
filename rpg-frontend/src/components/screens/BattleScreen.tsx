@@ -132,9 +132,16 @@ export default function BattleScreen() {
                       : 'bg-red-900/20 border-red-700/40'
                     }`}
                   >
-                    <p className="font-semibold text-gray-200">
-                      Turn {entry.turn} • {entry.actor === 'hero' ? 'Hero' : monster.name}
-                    </p>
+                    <div className="flex justify-between items-start mb-1">
+                      <p className="font-semibold text-gray-200">
+                        Turn {entry.turn} • {entry.actor === 'hero' ? 'Hero' : monster.name}
+                      </p>
+                      {entry.timestamp && (
+                        <p className="text-gray-500 text-xs">
+                          {new Date(entry.timestamp).toLocaleTimeString()}
+                        </p>
+                      )}
+                    </div>
                     <p className="text-gray-300">{entry.moveName}</p>
                     <p className="text-gray-400">
                       {renderLogDetails(entry.damage, entry.healing, entry.buffDesc)}
