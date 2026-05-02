@@ -68,6 +68,15 @@ func LoadConfig() *models.RunConfig {
         HeroStartMoves: heroMoves,
     }
 
+    // Try to load shop config if present
+    shopData, err := os.ReadFile("config/shop.json")
+    if err == nil {
+        var shopItems []models.ShopItem
+        if jerr := json.Unmarshal(shopData, &shopItems); jerr == nil {
+            cachedConfig.ShopItems = shopItems
+        }
+    }
+
     lastModified = info.ModTime()
     return cachedConfig
 }

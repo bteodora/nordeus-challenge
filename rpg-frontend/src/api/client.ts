@@ -27,6 +27,7 @@ export interface Monster {
   moves: Move[]
   xp_reward: number
   difficulty: number
+  coins_reward?: number
 }
 
 export interface ActiveBuff {
@@ -63,6 +64,31 @@ export interface RunConfig {
   all_moves: Move[]
   hero_start_stats: Stat
   hero_start_moves: Move[]
+  shop_items?: ShopItem[]
+}
+
+export interface ShopItem {
+  id: string
+  name: string
+  type: 'move' | 'stat'
+  move?: Move
+  stat?: string
+  amount?: number
+  cost: number
+  description?: string
+}
+
+export async function fetchShop(): Promise<ShopItem[]> {
+  const res = await fetch(`${BASE_URL}/shop`)
+  if (!res.ok) throw new Error('Failed to fetch shop')
+  return res.json()
+}
+
+export async function fetchMonsterReward(monsterId: string): Promise<{ coins: number }> {
+  const params = new URLSearchParams({ monster_id: monsterId })
+  const res = await fetch(`${BASE_URL}/monster/reward?${params.toString()}`)
+  if (!res.ok) throw new Error('Failed to fetch reward')
+  return res.json()
 }
 
 export async function fetchRunConfig(): Promise<RunConfig> {

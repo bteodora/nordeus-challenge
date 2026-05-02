@@ -3,10 +3,12 @@ import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
 import { Swords, Shield } from 'lucide-react'
 import { MoveManagementModal } from '../ui/MoveManagementModal'
+import ShopModal from '../ui/ShopModal'
 
 export default function MapScreen() {
   const { config, currentEncounterIndex, enterBattle, hero, equippedMoves, learnedMoves, equipMove } = useGameStore()
   const [isManageMovesOpen, setIsManageMovesOpen] = useState(false)
+  const [isShopOpen, setIsShopOpen] = useState(false)
 
   if (!config) return <div>Loading...</div>
 
@@ -36,6 +38,17 @@ export default function MapScreen() {
           onClick={() => setIsManageMovesOpen(true)}
           className="mt-4 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-colors">
           Manage Moves (M)
+        </button>
+        <button 
+          onClick={() => setIsShopOpen(true)}
+          className="mt-3 py-2 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold transition-colors">
+          Shop
+        </button>
+        <button 
+          onClick={() => { useGameStore.getState().saveRun(); useGameStore.getState().exitToMenu(); }}
+          className="mt-3 py-2 bg-gray-600 hover:bg-gray-500 rounded-xl font-bold transition-colors"
+        >
+          Save & Exit
         </button>
       </div>
 
@@ -77,7 +90,17 @@ export default function MapScreen() {
                     <Swords size={16} /> FIGHT
                   </button>
                 )}
-                {isPast && <span className="text-green-500 font-bold">DEFEATED</span>}
+                {isPast && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-500 font-bold">DEFEATED</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); enterBattle(index, true); }}
+                      className="px-3 py-1 bg-amber-600 hover:bg-amber-500 rounded font-bold text-sm"
+                    >
+                      Replay
+                    </button>
+                  </div>
+                )}
                 {isLocked && <span className="text-gray-600 font-bold">LOCKED</span>}
               </motion.div>
             )
@@ -97,6 +120,7 @@ export default function MapScreen() {
       equippedMoves={equippedMoves}
       onEquipMove={equipMove}
     />
+    <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} />
     </>
   )
 }

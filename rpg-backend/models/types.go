@@ -30,6 +30,7 @@ type Monster struct {
 	Moves      []Move   `json:"-"`
 	XPReward   int      `json:"xp_reward"`
 	Difficulty int      `json:"difficulty"`
+	CoinsReward int     `json:"coins_reward,omitempty"`
 }
 
 type BattleState struct {
@@ -79,4 +80,16 @@ type RunConfig struct {
 	AllMoves       []Move    `json:"all_moves"`
 	HeroStartStats Stat      `json:"hero_start_stats"`
 	HeroStartMoves []Move    `json:"hero_start_moves"`
+	ShopItems      []ShopItem `json:"shop_items,omitempty"`
+}
+
+type ShopItem struct {
+	ID string `json:"id"`
+	Name string `json:"name"`
+	Type string `json:"type"` // "move" | "stat"
+	Move *Move `json:"move,omitempty"`
+	Stat string `json:"stat,omitempty"`
+	Amount int `json:"amount,omitempty"`
+	Cost int `json:"cost"`
+	Description string `json:"description"`
 }

@@ -30,6 +30,8 @@ func main() {
 	api := r.Group("/api")
 	api.GET("/run/config", handlers.GetRunConfig)
 	api.GET("/monster/move", handlers.GetMonsterMove)
+	api.GET("/shop", handlers.GetShop)
+	api.GET("/monster/reward", handlers.GetMonsterReward)
 
 	r.Run(":8081")
 }

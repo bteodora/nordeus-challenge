@@ -1,0 +1,38 @@
+[
+  {
+    "id": "shop_meteor",
+    "name": "Meteor Strike",
+    "type": "move",
+    "move": {
+      "id": "shop_meteor",
+      "name": "Meteor Strike",
+      "type": "magic",
+      "effect": "damage_debuff",
+      "base_value": 40,
+      "target_stat": "defense",
+      "buff_amount": -5,
+      "buff_turns": 2,
+      "description": "Powerful magic strike that also reduces target defense for 2 turns."
+    },
+    "cost": 120,
+    "description": "Exclusive powerful move."
+  },
+  {
+    "id": "shop_attack_small",
+    "name": "+3 Attack",
+    "type": "stat",
+    "stat": "attack",
+    "amount": 3,
+    "cost": 50,
+    "description": "Permanent attack increase for the run."
+  },
+  {
+    "id": "shop_hp_small",
+    "name": "+30 Max HP",
+    "type": "stat",
+    "stat": "health",
+    "amount": 30,
+    "cost": 80,
+    "description": "Increase max HP and heal by the same amount."
+  }
+]

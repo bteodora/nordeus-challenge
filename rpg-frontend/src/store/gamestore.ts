@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { fetchMonsterMove, fetchRunConfig } from '../api/client'
+import { fetchMonsterMove, fetchRunConfig, fetchMonsterReward } from '../api/client'
 import type {
   RunConfig,
   Monster,
@@ -63,6 +63,7 @@ interface GameStore {
   hero: Hero
   learnedMoves: Move[]
   equippedMoves: Move[]
+  coins: number
   currentEncounterIndex: number
   battleState: BattleState | null
   battleLog: LogEntry[]
@@ -74,14 +75,21 @@ interface GameStore {
   newlyLearnedMove: Move | null
   runStats: RunStats
   isRaging: boolean
+  isReplay: boolean
+  // Shop actions
+  buyMove: (move: Move, cost: number) => boolean
+  buyStatUpgrade: (stat: 'health' | 'attack' | 'defense' | 'magic', amount: number, cost: number) => boolean
 
   // Actions
   startNewRun: () => Promise<void>
-  enterBattle: (index: number) => void
+  enterBattle: (index: number, isReplay?: boolean) => void
   selectMove: (move: Move) => Promise<void>
   equipMove: (move: Move, slot: number) => void
   continueAfterBattle: () => void
   goToMap: () => void
+  saveRun: () => void
+  loadRun: () => boolean
+  exitToMenu: () => void
 }
 
 const emptyStats = (): RunStats => ({
@@ -115,6 +123,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
   newlyLearnedMove: null,
   runStats: emptyStats(),
   isRaging: false,
+  isReplay: false,
+  coins: 0,
+  
+  saveRun: () => {
+    const s = get()
+    const payload = {
+      hero: s.hero,
+      learnedMoves: s.learnedMoves,
+      equippedMoves: s.equippedMoves,
+      currentEncounterIndex: s.currentEncounterIndex,
+      coins: s.coins,
+      runStats: s.runStats,
+      screen: s.screen,
+    }
+    try {
+      localStorage.setItem('rpg_save', JSON.stringify(payload))
+    } catch (e) {
+      console.warn('Failed to save:', e)
+    }
+  },
+  loadRun: () => {
+    try {
+      const raw = localStorage.getItem('rpg_save')
+      if (!raw) return false
+      const parsed = JSON.parse(raw)
+      set({
+        hero: parsed.hero || get().hero,
+        learnedMoves: parsed.learnedMoves || get().learnedMoves,
+        equippedMoves: parsed.equippedMoves || get().equippedMoves,
+        currentEncounterIndex: parsed.currentEncounterIndex || get().currentEncounterIndex,
+        coins: parsed.coins || get().coins,
+        runStats: parsed.runStats || get().runStats,
+        screen: parsed.screen || get().screen,
+      })
+      return true
+    } catch (e) {
+      console.warn('Failed to load save:', e)
+      return false
+    }
+  },
+  exitToMenu: () => {
+    set({ screen: 'menu' })
+  },
 
   startNewRun: async () => {
     const config = await fetchRunConfig()
@@ -130,13 +181,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       hero,
       equippedMoves: config.hero_start_moves,
       learnedMoves: config.hero_start_moves,
+      coins: 0,
       currentEncounterIndex: 0,
       screen: 'map',
       runStats: emptyStats(),
     })
   },
 
-  enterBattle: (index: number) => {
+  enterBattle: (index: number, isReplay?: boolean) => {
     const { config, hero } = get()
     if (!config) return
     const monster = config.monsters[index]
@@ -162,6 +214,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       isBattleOver: false,
       didWinBattle: false,
       newlyLearnedMove: null,
+      isReplay: isReplay || false,
       screen: 'battle',
     })
   },
@@ -225,7 +278,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (state.monster_hp <= 0) {
       stats.totalTurns += 1
-      return handleVictory(state, monster, stats, newLog, set, get)
+      return await handleVictory(state, monster, stats, newLog, set, get)
     }
 
     // Monster turn (server bira i racuna monster potez)
@@ -307,12 +360,35 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ screen: 'map' })
     }
   },
+  buyMove: (move: Move, cost: number) => {
+    const { coins, learnedMoves } = get()
+    if (coins < cost) return false
+    // Deduct and add move
+    set({ coins: coins - cost, learnedMoves: [...learnedMoves, move] })
+    return true
+  },
+  buyStatUpgrade: (stat: 'health' | 'attack' | 'defense' | 'magic', amount: number, cost: number) => {
+    const { coins, hero } = get()
+    if (coins < cost) return false
+    const newHero = { ...hero }
+    newHero.stats = { ...newHero.stats }
+    if (stat === 'health') {
+      newHero.stats.health += amount
+      newHero.maxHp = newHero.stats.health
+      newHero.currentHp = Math.min(newHero.maxHp, newHero.currentHp + amount)
+    } else if (stat === 'attack') newHero.stats.attack += amount
+    else if (stat === 'defense') newHero.stats.defense += amount
+    else if (stat === 'magic') newHero.stats.magic += amount
+
+    set({ coins: coins - cost, hero: newHero })
+    return true
+  },
 }))
 
 // --- Helpers ---
 
-function handleVictory(state: BattleState, monster: Monster, stats: RunStats, log: LogEntry[], set: any, get: any) {
-  const { currentEncounterIndex, config } = get()
+async function handleVictory(state: BattleState, monster: Monster, stats: RunStats, log: LogEntry[], set: any, get: any) {
+  const { currentEncounterIndex, config, isReplay } = get()
   const oldHero = get().hero;
 
   // XP i level up
@@ -339,17 +415,32 @@ function handleVictory(state: BattleState, monster: Monster, stats: RunStats, lo
   }
 
 
-  // Nauči random move od monstera
-  const randomMove = monster.moves[Math.floor(Math.random() * monster.moves.length)]
-  const alreadyLearned = get().learnedMoves.find((m: Move) => m.id === randomMove.id)
-  const newLearnedMoves = alreadyLearned ? get().learnedMoves : [...get().learnedMoves, randomMove]
+  // Nauči random move od monstera (samo ako nije replay)
+  let newLearnedMoves = get().learnedMoves
+  let randomMove: Move | null = null
+  if (!isReplay) {
+    randomMove = monster.moves[Math.floor(Math.random() * monster.moves.length)]
+    const alreadyLearned = get().learnedMoves.find((m: Move) => m.id === randomMove?.id)
+    newLearnedMoves = alreadyLearned ? get().learnedMoves : [...get().learnedMoves, randomMove]
+  }
 
   const isLastMonster = currentEncounterIndex === (config?.monsters.length ?? 5) - 1
+  // Ask server for coins reward
+  var coinsGained = 0
+  if (monster && monster.id) {
+    try {
+      const res = await fetchMonsterReward(monster.id)
+      coinsGained = res.coins || (monster.difficulty || 1) * 20
+    } catch (e) {
+      coinsGained = (monster.difficulty || 1) * 20
+    }
+  }
 
+  const alreadyLearned = !isReplay && randomMove && get().learnedMoves.find((m: Move) => m.id === randomMove?.id)
   set({
     hero: newHero,
     learnedMoves: newLearnedMoves,
-    newlyLearnedMove: alreadyLearned ? null : randomMove,
+    newlyLearnedMove: alreadyLearned ? null : (isReplay ? null : randomMove),
     battleState: state,
     battleLog: [...get().battleLog, ...log],
     isBattleOver: true,
@@ -358,9 +449,10 @@ function handleVictory(state: BattleState, monster: Monster, stats: RunStats, lo
       ...stats,
       monstersDefeated: stats.monstersDefeated + 1,
       timesLeveled: stats.timesLeveled + timesLeveled,
-      movesLearned: alreadyLearned ? stats.movesLearned : [...stats.movesLearned, randomMove.name],
+      movesLearned: (isReplay || alreadyLearned) ? stats.movesLearned : [...stats.movesLearned, randomMove!.name],
       outcome: isLastMonster ? 'victory' : null,
     },
+    coins: get().coins + coinsGained,
     screen: isLastMonster ? 'summary' : 'postbattle',
   })
 }
