@@ -20,7 +20,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:5173", "http://localhost:5174"},
+		AllowOrigins: []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176","http://localhost:5177",},
 		AllowMethods: []string{"GET", "POST", "OPTIONS"},
 		AllowHeaders: []string{"Content-Type"},
 	}))
@@ -29,9 +29,11 @@ func main() {
 
 	api := r.Group("/api")
 	api.GET("/run/config", handlers.GetRunConfig)
-	api.GET("/monster/move", handlers.GetMonsterMove)
+	api.POST("/monster/move", handlers.GetMonsterMove)
 	api.GET("/shop", handlers.GetShop)
 	api.GET("/monster/reward", handlers.GetMonsterReward)
+		api.GET("/endless/monster", handlers.GetEndlessMonster)
+	api.POST("/endless/experience", handlers.RecordExperience)
 
 	r.Run(":8081")
 }

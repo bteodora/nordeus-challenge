@@ -10,13 +10,14 @@ export default function PostBattleScreen() {
     hero,
     equippedMoves,
     runStats,
-    goToMap,
+    continueAfterBattle,
     equipMove,
   } = useGameStore()
 
   if (!config) return <div>Loading...</div>
 
-  const monster = config.monsters[currentEncounterIndex]
+  const { currentMonster, endlessMode } = useGameStore()
+  const monster = endlessMode && currentMonster ? currentMonster : config.monsters[currentEncounterIndex]
 
   const handleEquipMove = (slot: number) => {
     if (newlyLearnedMove) {
@@ -139,7 +140,7 @@ export default function PostBattleScreen() {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            onClick={goToMap}
+            onClick={continueAfterBattle}
             className="w-full py-3 px-6 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
           >
             Continue to Next Battle →
@@ -186,7 +187,7 @@ export default function PostBattleScreen() {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            onClick={goToMap}
+            onClick={continueAfterBattle}
             className="w-full py-3 px-6 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
           >
             Return to Map

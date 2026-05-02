@@ -10,21 +10,28 @@ import (
 
 // @Summary Get monster's next move
 // @Description Returns monster move based on current battle state
+// @Accept json
 // @Produce json
-// @Param state query string true "Current battle state as JSON"
+// @Param state body models.BattleState true "Current battle state as JSON"
 // @Success 200 {object} models.MoveResult
-// @Router /api/monster/move [get]
+// @Router /api/monster/move [post]
+// GetMonsterMove accepts POST JSON body with the battle state. For backwards compatibility
+// it also accepts GET with a `state` query parameter containing JSON.
 func GetMonsterMove(c *gin.Context) {
-	stateRaw := c.Query("state")
-	if stateRaw == "" {
-		c.JSON(400, gin.H{"error": "missing required query param: state"})
-		return
-	}
-
 	var state models.BattleState
-	if err := json.Unmarshal([]byte(stateRaw), &state); err != nil {
-		c.JSON(400, gin.H{"error": "invalid battle state json: " + err.Error()})
-		return
+
+	// Prefer JSON body (frontend uses POST). If absent, fall back to query param.
+	if err := c.ShouldBindJSON(&state); err != nil {
+		// try query param fallback
+		stateRaw := c.Query("state")
+		if stateRaw == "" {
+			c.JSON(400, gin.H{"error": "missing required battle state in request body or 'state' query param"})
+			return
+		}
+		if err := json.Unmarshal([]byte(stateRaw), &state); err != nil {
+			c.JSON(400, gin.H{"error": "invalid battle state json: " + err.Error()})
+			return
+		}
 	}
 
 	config := engine.LoadConfig()

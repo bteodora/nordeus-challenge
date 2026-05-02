@@ -3,6 +3,8 @@ import MainMenu from './components/screens/MainMenu'
 import MapScreen from './components/screens/MapScreen'
 import BattleScreen from './components/screens/BattleScreen'
 import PostBattleScreen from './components/screens/PostBattleScreen'
+import PostEndlessScreen from './components/screens/PostEndlessScreen'
+import EndlessScreen from './components/screens/EndlessScreen'
 // import SummaryScreen from './screens/SummaryScreen' // Za kasnije
 
 function App() {
@@ -14,6 +16,8 @@ function App() {
       {screen === 'map' && <MapScreen />}
       {screen === 'battle' && <BattleScreen />}
       {screen === 'postbattle' && <PostBattleScreen />}
+      {screen === 'postendless' && <PostEndlessScreen />}
+      {screen === 'endless' && <EndlessScreen />}
       {/* {screen === 'summary' && <SummaryScreen />} */}
     </div>
   )

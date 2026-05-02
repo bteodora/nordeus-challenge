@@ -6,6 +6,8 @@ import { Play, Settings, X, RotateCcw } from 'lucide-react'
 export default function MainMenu() {
   const startNewRun = useGameStore((state) => state.startNewRun)
   const loadRun = useGameStore((state) => state.loadRun)
+  const startEndless = useGameStore((s) => s.startEndless)
+  const gotoEndless = () => startEndless()
   const [hasSave, setHasSave] = useState(false)
 
   useEffect(() => {
@@ -57,6 +59,9 @@ export default function MainMenu() {
         )}
         <button className="flex items-center justify-center gap-2 py-3 px-6 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl transition-all">
           <Settings size={20} /> SETTINGS
+        </button>
+        <button onClick={gotoEndless} className="flex items-center justify-center gap-2 py-3 px-6 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl transition-all">
+          Endless Mode
         </button>
         <button className="flex items-center justify-center gap-2 py-3 px-6 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-xl transition-all">
           <X size={20} /> EXIT

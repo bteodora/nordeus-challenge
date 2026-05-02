@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { fetchMonsterMove, fetchRunConfig, fetchMonsterReward } from '../api/client'
+import { fetchEndlessMonster } from '../api/endless'
+import { postExperience } from '../api/endless'
 import type {
   RunConfig,
   Monster,
@@ -60,7 +62,7 @@ const DEFAULT_HERO: Hero = {
 
 interface GameStore {
   // State
-  screen: 'menu' | 'map' | 'battle' | 'postbattle' | 'summary'
+  screen: 'menu' | 'map' | 'battle' | 'postbattle' | 'postendless' | 'summary' | 'endless'
   config: RunConfig | null
   hero: Hero
   learnedMoves: Move[]
@@ -79,6 +81,7 @@ interface GameStore {
   isRaging: boolean
   isReplay: boolean
   replayEncounterIndex: number
+  endlessMode: boolean
   // Shop actions
   buyMove: (move: Move, cost: number) => boolean
   buyStatUpgrade: (stat: 'health' | 'attack' | 'defense' | 'magic', amount: number, cost: number) => boolean
@@ -86,13 +89,23 @@ interface GameStore {
   // Actions
   startNewRun: () => Promise<void>
   loadRun: () => Promise<boolean>
+  startEndless: () => Promise<void>
   enterBattle: (index: number, isReplay?: boolean) => void
+  // Start a battle using a provided monster (used for endless mode temporary monsters)
+  enterBattleWithMonster: (monster: Monster, upcoming?: any[]) => void
   selectMove: (move: Move) => Promise<void>
   equipMove: (move: Move, slot: number) => void
   continueAfterBattle: () => void
   goToMap: () => void
+  applyRegen: (amount: number) => void
   saveRun: () => void
   exitToMenu: () => void
+  // Navigation helper
+  setScreen: (s: GameStore['screen']) => void
+  // Endless mode state
+  endlessWins: number
+  currentMonster: Monster | null
+  endlessUpcoming: any[]
 }
 
 const emptyStats = (): RunStats => ({
@@ -129,6 +142,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isReplay: false,
   replayEncounterIndex: -1,
   coins: 0,
+  endlessMode: false,
+  endlessWins: 0,
+  currentMonster: null,
+  endlessUpcoming: [],
   
   saveRun: () => {
     const s = get()
@@ -139,6 +156,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentEncounterIndex: s.currentEncounterIndex,
       coins: s.coins,
       runStats: s.runStats,
+      endlessWins: s.endlessWins,
       screen: s.screen,
     }
     try {
@@ -147,6 +165,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       console.warn('Failed to save:', e)
     }
   },
+  setScreen: (s: any) => set({ screen: s }),
   loadRun: async () => {
     try {
       const raw = localStorage.getItem('rpg_save')
@@ -163,6 +182,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         equippedMoves: parsed.equippedMoves || get().equippedMoves,
         currentEncounterIndex: parsed.currentEncounterIndex || get().currentEncounterIndex,
         coins: parsed.coins || get().coins,
+        endlessWins: parsed.endlessWins || 0,
         runStats: parsed.runStats || get().runStats,
         screen: 'map',
       })
@@ -192,6 +212,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       learnedMoves: config.hero_start_moves,
       coins: 0,
       currentEncounterIndex: 0,
+      // Reset endless-specific state
+      endlessMode: false,
+      currentMonster: null,
+      endlessWins: 0,
       screen: 'map',
       runStats: emptyStats(),
     })
@@ -228,13 +252,81 @@ export const useGameStore = create<GameStore>((set, get) => ({
       screen: 'battle',
     })
   },
+  enterBattleWithMonster: (monster: Monster, upcoming?: any[]) => {
+    ;(async () => {
+      // Ensure run config exists and equipped moves are populated
+      try {
+        if (!get().config) {
+          const cfg = await fetchRunConfig()
+          set({ config: cfg })
+        }
+        const cfg = get().config
+        const equipped = get().equippedMoves
+        if (cfg && (!equipped || equipped.length === 0)) {
+          set({ equippedMoves: cfg.hero_start_moves || [] })
+        }
+      } catch (e) {
+        console.warn('Failed loading run config before endless battle', e)
+      }
+
+      const hero = get().hero
+      const battleState: BattleState = {
+        hero_hp: hero.currentHp,
+        hero_max_hp: hero.maxHp,
+        monster_hp: monster.stats.health,
+        monster_max_hp: monster.stats.health,
+        hero_stats: hero.stats,
+        monster_stats: monster.stats,
+        active_buffs: [],
+        turn: 1,
+        monster_id: monster.id,
+      }
+
+      set({
+        currentMonster: monster,
+        endlessMode: true,
+        endlessUpcoming: upcoming || [],
+        battleState,
+        battleLog: [],
+        damageNumbers: [],
+        monsterTell: null,
+        isBattleOver: false,
+        didWinBattle: false,
+        newlyLearnedMove: null,
+        isReplay: false,
+        replayEncounterIndex: -1,
+        screen: 'battle',
+      })
+    })()
+  },
+
+  startEndless: async () => {
+    try {
+      // Reset hero HP to max when starting a new endless run
+      const hero = get().hero
+      if (hero.currentHp < hero.maxHp) {
+        set({ hero: { ...hero, currentHp: hero.maxHp } })
+      }
+      const res = await fetchEndlessMonster(get().endlessWins)
+      if (res && res.monster) {
+        get().enterBattleWithMonster(res.monster, res.upcoming)
+      }
+    } catch (e) {
+      console.warn('Failed to start endless:', e)
+    }
+  },
+
+  applyRegen: (amount: number) => {
+    const hero = get().hero
+    const newHp = Math.min(hero.maxHp, hero.currentHp + amount)
+    set({ hero: { ...hero, currentHp: newHp } })
+  },
 
   selectMove: async (move: Move) => {
-    const { battleState, config, currentEncounterIndex, replayEncounterIndex, isReplay, runStats } = get()
-    if (!battleState || !config) return
+    const { battleState, config, currentEncounterIndex, replayEncounterIndex, isReplay, runStats, endlessMode, currentMonster } = get()
+    if (!battleState) return
 
-    const monsterIndex = isReplay ? replayEncounterIndex : currentEncounterIndex
-    const monster = config.monsters[monsterIndex]
+    const monster = (endlessMode && currentMonster) ? currentMonster : (config ? config.monsters[isReplay ? replayEncounterIndex : currentEncounterIndex] : null)
     let state = { ...battleState }
     const newLog: LogEntry[] = []
     let stats = { ...runStats }
@@ -289,11 +381,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (state.monster_hp <= 0) {
       stats.totalTurns += 1
+      if (!monster) return
       return await handleVictory(state, monster, stats, newLog, set, get)
     }
 
     // Monster turn (server bira i racuna monster potez)
-    const monsterResult = await fetchMonsterMove(state)
+    let monsterResult
+    try {
+      monsterResult = await fetchMonsterMove(state)
+    } catch (e) {
+      console.error('Monster move fetch failed:', e)
+      // Nastavi rundu bez monster poteza umesto da crashuješ
+      set({
+        battleState: state,
+        battleLog: [...get().battleLog, ...newLog],
+        runStats: stats,
+      })
+      return
+    }
 
     if (monsterResult.damage > 0) {
       if (monsterResult.move.effect === 'buff_self_damage') {
@@ -325,6 +430,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     stats.totalTurns += 1
 
     if (state.hero_hp <= 0) {
+      const endlessMode = get().endlessMode
       set({
         battleState: state,
         battleLog: [...get().battleLog, ...newLog],
@@ -335,7 +441,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         isReplay: false,
         replayEncounterIndex: -1,
         runStats: { ...stats, outcome: 'defeat' },
-        screen: 'postbattle',
+        screen: endlessMode ? 'postendless' : 'postbattle',
       })
       return
     }
@@ -357,10 +463,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   continueAfterBattle: () => {
-    const { didWinBattle, currentEncounterIndex } = get()
+    const { didWinBattle, currentEncounterIndex, endlessMode, endlessWins } = get()
+    
+    // Endless mode — nikad ne ide na map screen
+    if (endlessMode) {
+      if (didWinBattle) {
+        set({ endlessWins: endlessWins + 1, screen: 'endless', currentMonster: null })
+      } else {
+        set({ screen: 'postendless', endlessMode: false })
+      }
+      return
+    }
+
+    // Normalni run
     if (didWinBattle && currentEncounterIndex < 4) {
-      // Unlock next monster after victory
       set({ screen: 'map', currentEncounterIndex: currentEncounterIndex + 1 })
+    } else if (didWinBattle && currentEncounterIndex >= 4) {
+      set({ screen: 'summary' })
     } else {
       set({ screen: 'map' })
     }
@@ -455,11 +574,201 @@ async function handleVictory(state: BattleState, monster: Monster, stats: RunSta
     }
   }
 
+  // If this was an endless-mode run, post experience for RL training
+  try {
+    if (get().endlessMode) {
+      // find last hero action from log
+      const lastHero = [...log].reverse().find((l) => l.actor === 'hero')
+      const actionId = lastHero ? lastHero.moveName : ''
+      // best-effort post; don't block UX
+      postExperience({ state, action_id: actionId, reward: coinsGained, outcome: 'win' }).catch(() => {})
+    }
+  } catch (e) {
+    // ignore
+  }
+
   const alreadyLearned = !isReplay && randomMove && get().learnedMoves.find((m: Move) => m.id === randomMove?.id)
+  
+  // If we're in endless mode, continue immediately into the next battle without showing postbattle
+  const isEndless = get().endlessMode
+  if (isEndless) {
+  const newWins = get().endlessWins + 1
+  const healPerBattle = Math.round(newHero.maxHp * 0.10)
+  const heroAfterHealing = { 
+    ...newHero, 
+    currentHp: Math.min(newHero.maxHp, newHero.currentHp + healPerBattle) 
+  }
+
+  // Regen na svakih 5 pobeda
+  let heroFinal = heroAfterHealing
+  if (newWins > 0 && newWins % 5 === 0) {
+    const regenAmount = Math.round(heroFinal.maxHp * 0.20)
+    heroFinal = { ...heroFinal, currentHp: Math.min(heroFinal.maxHp, heroFinal.currentHp + regenAmount) }
+  }
+
+  // Ažuriraj stats i hero
+  const newRunStats: RunStats = {
+    ...stats,
+    monstersDefeated: stats.monstersDefeated + 1,
+    timesLeveled: stats.timesLeveled + timesLeveled,
+    movesLearned: alreadyLearned ? stats.movesLearned : [...stats.movesLearned, randomMove?.name ?? ''],
+    outcome: null,
+    lastStatGains: timesLeveled > 0 ? levelUpStats : undefined,
+  }
+
+  set({
+    hero: heroFinal,
+    learnedMoves: newLearnedMoves,
+    newlyLearnedMove: alreadyLearned ? null : randomMove,
+    coins: get().coins + coinsGained,
+    endlessWins: newWins,
+    runStats: newRunStats,
+    isReplay: false,
+    replayEncounterIndex: -1,
+  })
+
+  // Fetch sledećeg monstrea — uvek sa servera, ne iz upcoming liste
+  // (upcoming lista je samo za preview, ne za stvarnu borbu)
+  try {
+    const res = await fetchEndlessMonster(newWins)
+    if (!res || !res.monster) throw new Error('No monster in response')
+    
+    const nm = res.monster as Monster
+    
+    // Validacija — mora imati stats
+    if (!nm.stats || !nm.id) throw new Error('Invalid monster data')
+
+    const nextBattleState: BattleState = {
+      hero_hp: heroFinal.currentHp,
+      hero_max_hp: heroFinal.maxHp,
+      monster_hp: nm.stats.health,
+      monster_max_hp: nm.stats.health,
+      hero_stats: heroFinal.stats,
+      monster_stats: nm.stats,
+      active_buffs: [],
+      turn: 1,
+      monster_id: nm.id,
+    }
+
+    set({
+      currentMonster: nm,
+      endlessUpcoming: res.upcoming || [],
+      battleState: nextBattleState,
+      battleLog: [],
+      damageNumbers: [],
+      monsterTell: null,
+      isBattleOver: false,
+      didWinBattle: false,
+      screen: 'battle', // ← direktno u sledeću borbu
+    })
+    return
+
+  } catch (e) {
+    console.warn('Failed fetching next endless monster, will retry/fallback:', e)
+
+    // Try a few retries before giving up (best-effort UX)
+    let fetched = null as any
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        // small delay between attempts
+        await new Promise((res) => setTimeout(res, attempt * 250))
+        const r = await fetchEndlessMonster(newWins)
+        if (r && r.monster) {
+          fetched = r
+          break
+        }
+      } catch (_err) {
+        // ignore and loop
+      }
+    }
+
+    // If retries succeeded, continue with that monster
+    if (fetched && fetched.monster) {
+      const nm = fetched.monster as Monster
+      if (!nm.stats || !nm.id) {
+        // treat invalid data as failure and fall through to fallback
+      } else {
+        const nextBattleState: BattleState = {
+          hero_hp: heroFinal.currentHp,
+          hero_max_hp: heroFinal.maxHp,
+          monster_hp: nm.stats.health,
+          monster_max_hp: nm.stats.health,
+          hero_stats: heroFinal.stats,
+          monster_stats: nm.stats,
+          active_buffs: [],
+          turn: 1,
+          monster_id: nm.id,
+        }
+
+        set({
+          currentMonster: nm,
+          endlessUpcoming: fetched.upcoming || [],
+          battleState: nextBattleState,
+          battleLog: [],
+          damageNumbers: [],
+          monsterTell: null,
+          isBattleOver: false,
+          didWinBattle: false,
+          screen: 'battle',
+        })
+        return
+      }
+    }
+
+    // Fallback: if we have an upcoming preview list from previous state, try to use its first monster
+    const fallbackUpcoming = get().endlessUpcoming || []
+    if (fallbackUpcoming.length > 0 && fallbackUpcoming[0].monster) {
+      try {
+        const nm = fallbackUpcoming[0].monster as Monster
+        if (nm && nm.id && nm.stats) {
+          const nextBattleState: BattleState = {
+            hero_hp: heroFinal.currentHp,
+            hero_max_hp: heroFinal.maxHp,
+            monster_hp: nm.stats.health,
+            monster_max_hp: nm.stats.health,
+            hero_stats: heroFinal.stats,
+            monster_stats: nm.stats,
+            active_buffs: [],
+            turn: 1,
+            monster_id: nm.id,
+          }
+          set({
+            currentMonster: nm,
+            endlessUpcoming: fallbackUpcoming.slice(1),
+            battleState: nextBattleState,
+            battleLog: [],
+            damageNumbers: [],
+            monsterTell: null,
+            isBattleOver: false,
+            didWinBattle: false,
+            screen: 'battle',
+          })
+          return
+        }
+      } catch (_e) {
+        // fall through to ending
+      }
+    }
+
+    // If we reach here, all attempts failed — end the endless run (server-side error or bad data)
+    console.error('All attempts to fetch next endless monster failed, ending endless run')
+    set({
+      battleState: state,
+      battleLog: [...get().battleLog, ...log],
+      isBattleOver: true,
+      didWinBattle: true,
+      runStats: { ...newRunStats, outcome: 'victory' },
+      screen: 'postendless',
+    })
+    return
+  }
+}
+
+  // --- Non-endless victory path ---
   set({
     hero: newHero,
     learnedMoves: newLearnedMoves,
-    newlyLearnedMove: alreadyLearned ? null : (isReplay ? null : randomMove),
+    newlyLearnedMove: alreadyLearned ? null : randomMove,
     battleState: state,
     battleLog: [...get().battleLog, ...log],
     isBattleOver: true,

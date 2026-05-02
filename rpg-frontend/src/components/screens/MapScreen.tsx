@@ -81,7 +81,7 @@ export default function MapScreen() {
                 onClick={() => isCurrent && enterBattle(index)}
               >
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="text-4xl">{isPast ? '💀' : '👹'}</div>
+                    <div className="text-4xl">{isPast ? '💀' : '👹'}</div>
                   <div>
                     <h3 className={`font-bold ${isCurrent ? 'text-white' : 'text-gray-400'}`}>{monster.name}</h3>
                     <div className="text-xs text-red-400">

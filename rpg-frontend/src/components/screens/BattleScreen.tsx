@@ -4,11 +4,12 @@ import type { Move } from '../../api/client'
 import { MonsterTell } from '../ui/MonsterTell'
 import BattleCharacter from '../battle/BattleCharacter'
 import MoveButton from '../ui/MoveButton'
+import EndlessHUD from '../battle/EndlessHUD'
 
 export default function BattleScreen() {
   const {
     config, currentEncounterIndex, battleState, battleLog, monsterTell,
-    selectMove, equippedMoves, damageNumbers, isRaging
+    selectMove, equippedMoves, damageNumbers, isRaging, endlessMode, endlessUpcoming, currentMonster
   } = useGameStore()
 
   const [isProcessing, setIsProcessing] = useState(false)
@@ -37,8 +38,8 @@ export default function BattleScreen() {
   }, [battleLog])
 
   if (!config || !battleState) return <div className="flex items-center justify-center h-full">Loading Battle...</div>
+  const monster = endlessMode && currentMonster ? currentMonster : config.monsters[currentEncounterIndex]
 
-  const monster = config.monsters[currentEncounterIndex]
 
   const handleSelectMove = async (move: Move) => {
     if (isProcessing) return
@@ -84,6 +85,25 @@ export default function BattleScreen() {
 
       {/* Srednji deo: Arena + Battle Log */}
       <div className="h-3/6 flex flex-col md:flex-row gap-4 px-2 md:px-4 items-stretch">
+        {endlessMode && endlessUpcoming && endlessUpcoming.length > 0 && (
+          <div className="w-full mb-2 flex gap-2 overflow-x-auto px-2">
+            {endlessUpcoming.map((u: any, idx: number) => (
+              <div key={idx} className="min-w-[120px] bg-gray-800/60 border border-gray-700 rounded p-2 text-xs">
+                {u.type === 'monster' ? (
+                  <div>
+                    <div className="font-bold">{u.monster.name}</div>
+                    <div className="text-gray-400 text-xs">Diff: {u.monster.difficulty}</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="font-bold">Event: {u.event}</div>
+                    <div className="text-gray-400 text-xs">{u.desc || ''}</div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex-1 flex justify-between items-end">
           <BattleCharacter 
             name="Knight"

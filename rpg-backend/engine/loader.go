@@ -10,6 +10,8 @@ import (
 var (
     lastModified time.Time
     cachedConfig *models.RunConfig
+    // Temporary monsters registered for endless mode
+    tempMonsters = make(map[string]*models.Monster)
 )
 
 func LoadConfig() *models.RunConfig {
@@ -82,10 +84,23 @@ func LoadConfig() *models.RunConfig {
 }
 
 func FindMonster(id string, config *models.RunConfig) *models.Monster {
-    for _, m := range config.Monsters {
-        if m.ID == id {
-            return &m
+    // Check temporary monsters first
+    if mptr, ok := tempMonsters[id]; ok {
+        return mptr
+    }
+    for i := range config.Monsters {
+        if config.Monsters[i].ID == id {
+            return &config.Monsters[i]
         }
     }
     return nil
+}
+
+// RegisterTemporaryMonster stores a temporary monster available for a short time
+// RegisterTemporaryMonster stores a pointer to a temporary monster so it can be
+// referenced by its generated ID during battles. It makes a copy to ensure the
+// stored pointer is stable.
+func RegisterTemporaryMonster(m models.Monster) {
+    tm := m
+    tempMonsters[tm.ID] = &tm
 }

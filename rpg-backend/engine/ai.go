@@ -6,6 +6,18 @@ import (
 )
 
 func PickMonsterMove(monster models.Monster, state models.BattleState) models.Move {
+    // If RL is enabled and agent exists, delegate to the agent.
+    // The agent itself uses the heuristic path directly to avoid recursion.
+    if RL != nil && UseRL {
+        idx := RL.SelectMove(monster, state)
+        if idx >= 0 && idx < len(monster.Moves) {
+            return monster.Moves[idx]
+        }
+    }
+    return pickMonsterMoveHeuristic(monster, state)
+}
+
+func pickMonsterMoveHeuristic(monster models.Monster, state models.BattleState) models.Move {
     heroHPPct := float64(state.HeroHP) / float64(state.HeroMaxHP)
     monsterHPPct := float64(state.MonsterHP) / float64(state.MonsterMaxHP)
     isRaging := monsterHPPct < 0.30
