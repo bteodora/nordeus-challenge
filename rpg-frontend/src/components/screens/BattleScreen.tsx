@@ -64,14 +64,22 @@ export default function BattleScreen() {
     <div className="w-full h-full bg-gradient-to-b from-gray-900 to-black p-4 md:p-8 flex flex-col justify-between">
       
       {/* Gornji deo: Turn Counter i MonsterTell */}
-      <div className="h-1/6 flex justify-center items-start">
-        {monsterTell ? (
-          <MonsterTell monsterName={monster.name} move={monsterTell} />
-        ) : (
-          <div className="text-center p-3 bg-gray-800/50 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-400">Turn {battleState.turn}</h2>
-          </div>
-        )}
+      <div className="h-1/6 flex justify-between items-start px-4">
+        <div className="text-center p-2">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Battle Turn</p>
+          <p className="text-3xl font-black text-cyan-400">{battleState.turn}</p>
+        </div>
+        <div className="flex-1 flex justify-center">
+          {monsterTell ? (
+            <MonsterTell monsterName={monster.name} move={monsterTell} />
+          ) : (
+            <div className="text-center p-3 text-gray-400 text-sm">Awaiting action...</div>
+          )}
+        </div>
+        <div className="text-right p-2">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">HP Status</p>
+          <p className="text-lg font-bold text-red-400">{battleState.monster_hp}/{battleState.monster_max_hp}</p>
+        </div>
       </div>
 
       {/* Srednji deo: Arena + Battle Log */}

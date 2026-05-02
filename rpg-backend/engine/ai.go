@@ -19,6 +19,15 @@ func PickMonsterMove(monster models.Monster, state models.BattleState) models.Mo
         return false
     }
 
+    hasActiveDebuff := func(who, stat string) bool {
+        for _, b := range state.ActiveBuffs {
+            if b.AffectsWho == who && b.TargetStat == stat && b.Amount < 0 {
+                return true
+            }
+        }
+        return false
+    }
+
     findByEffect := func(effect string) *models.Move {
         for _, m := range monster.Moves {
             if m.Effect == effect {
@@ -28,8 +37,8 @@ func PickMonsterMove(monster models.Monster, state models.BattleState) models.Mo
         return nil
     }
 
-    // 1. Ako je u rage i može da healsuje — uvek healsuje
-    if isRaging {
+    // 1. CRITICAL: If HP < 25% and can heal/drain → prioritize survival
+    if monsterHPPct < 0.25 {
         if m := findByEffect("heal"); m != nil {
             return *m
         }
@@ -38,28 +47,47 @@ func PickMonsterMove(monster models.Monster, state models.BattleState) models.Mo
         }
     }
 
-    // 2. Debuff hero Attack ako heroj nije već debuffovan i ima visok HP
-    if heroHPPct > 0.60 && !hasActiveBuff("hero", "attack") {
+    // 2. If in rage (30-60% HP) → aggressive: prioritize damage moves
+    if isRaging && monsterHPPct >= 0.30 && monsterHPPct < 0.60 {
+        // Prefer heavy damage moves
+        for _, m := range monster.Moves {
+            if (m.Effect == "damage" || m.Effect == "damage_debuff") && m.BaseValue >= 25 {
+                return m
+            }
+        }
+    }
+
+    // 3. Defense: If hero is buffed (high ATK) and monster not buffed → buff/debuff
+    if hasActiveBuff("hero", "attack") && !hasActiveBuff("monster", "defense") {
+        if m := findByEffect("buff"); m != nil && m.TargetStat == "defense" {
+            return *m
+        }
+    }
+
+    // 4. Offense: If hero has no defense debuff and hero HP > 50% → debuff attack
+    if heroHPPct > 0.50 && !hasActiveDebuff("hero", "attack") {
         if m := findByEffect("debuff"); m != nil {
             return *m
         }
     }
 
-    // 3. Buff sebe u ranim turnovima
+    // 5. Smart buff timing: Turn 1-2 and no self-buffs → buff attack/magic
     if state.Turn <= 2 && !hasActiveBuff("monster", "attack") && !hasActiveBuff("monster", "magic") {
         if m := findByEffect("buff"); m != nil {
             return *m
         }
     }
 
-    // 4. Drain Life ako HP između 30-60%
-    if monsterHPPct < 0.60 && monsterHPPct >= 0.30 {
+    // 6. Mid-life drain: If 40-70% HP → consider healing moves
+    if monsterHPPct >= 0.40 && monsterHPPct < 0.70 {
         if m := findByEffect("drain"); m != nil {
-            return *m
+            if rand.Float64() > 0.6 { // 40% chance
+                return *m
+            }
         }
     }
 
-    // 5. Weighted random za ostalo — heavy damage moveseti imaju veću težinu
+    // 7. Weighted random for remaining moves
     return weightedRandom(monster.Moves)
 }
 

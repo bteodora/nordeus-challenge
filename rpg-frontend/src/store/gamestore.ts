@@ -76,6 +76,7 @@ interface GameStore {
   runStats: RunStats
   isRaging: boolean
   isReplay: boolean
+  replayEncounterIndex: number
   // Shop actions
   buyMove: (move: Move, cost: number) => boolean
   buyStatUpgrade: (stat: 'health' | 'attack' | 'defense' | 'magic', amount: number, cost: number) => boolean
@@ -124,6 +125,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   runStats: emptyStats(),
   isRaging: false,
   isReplay: false,
+  replayEncounterIndex: -1,
   coins: 0,
   
   saveRun: () => {
@@ -189,7 +191,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   enterBattle: (index: number, isReplay?: boolean) => {
-    const { config, hero } = get()
+    const { config, hero, currentEncounterIndex } = get()
     if (!config) return
     const monster = config.monsters[index]
 
@@ -206,7 +208,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     set({
-      currentEncounterIndex: index,
+      currentEncounterIndex: isReplay ? currentEncounterIndex : index,
+      replayEncounterIndex: isReplay ? index : -1,
       battleState,
       battleLog: [],
       damageNumbers: [],
@@ -220,10 +223,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   selectMove: async (move: Move) => {
-    const { battleState, config, currentEncounterIndex, runStats } = get()
+    const { battleState, config, currentEncounterIndex, replayEncounterIndex, isReplay, runStats } = get()
     if (!battleState || !config) return
 
-    const monster = config.monsters[currentEncounterIndex]
+    const monsterIndex = isReplay ? replayEncounterIndex : currentEncounterIndex
+    const monster = config.monsters[monsterIndex]
     let state = { ...battleState }
     const newLog: LogEntry[] = []
     let stats = { ...runStats }
@@ -320,6 +324,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         didWinBattle: false,
         monsterTell: monsterResult.monster_tell || null,
         isRaging: monsterResult.is_raging,
+        isReplay: false,
+        replayEncounterIndex: -1,
         runStats: { ...stats, outcome: 'defeat' },
         screen: 'postbattle',
       })
@@ -445,6 +451,8 @@ async function handleVictory(state: BattleState, monster: Monster, stats: RunSta
     battleLog: [...get().battleLog, ...log],
     isBattleOver: true,
     didWinBattle: true,
+    isReplay: false,
+    replayEncounterIndex: -1,
     runStats: {
       ...stats,
       monstersDefeated: stats.monstersDefeated + 1,

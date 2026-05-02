@@ -1,15 +1,40 @@
-- [x] Move descriptions — Hover shows `move.description` (implemented in frontend MoveButton tooltip)
-- [ ] Attribute choices on level up — Partial: level-up exists (auto stat increases) but player choice is not implemented
-- [ ] Status effects — Partial: `ActiveBuff`/buffs exist (buff/debuff, ticks), but bleed/poison/etc. aren't fully implemented
-- [ ] Resource costs — Not done: moves have no HP/mana cost fields yet
-- [ ] Save & Exit — Done: localStorage save/resume implemented
-- [x] Battle log — Done: running battle log stored and shown in BattleScreen
-- [ ] Battle animations — Partial: basic hit/shake feedback exists; full animations not implemented
-- [ ] Smarter bot — Partial: situational AI exists in `engine.PickMonsterMove`, but can be improved
-- [ ] Items — Not done: item drops/equipping system not implemented
-- [x] A shop — Done: in-run shop implemented with coins reward system
-- [x] Replay fight — Done: defeated monsters can be replayed for coins/XP but no move reward
-- [ ] Non-linear map — Not done: map is linear (5 encounters)
-- [ ] Environmental effects — Not done: no environment modifiers implemented
-- [ ] Endless mode — Not done: no infinite-run mode implemented
-- [ ] Hero classes — Partial: hero stats/moves exist but no class selection system
+## DONE ✅
+
+- [x] Move descriptions — Hover shows `move.description` (MoveButton tooltip)
+- [x] Battle log — Running battle log with turn-by-turn actions (BattleScreen)
+- [x] Save & Exit — localStorage save/resume (MapScreen / PostBattle)
+- [x] A shop — In-run shop with coins reward system (ShopModal)
+- [x] Replay fight — Defeated monsters can be replayed (coins/XP, no move)
+- [x] Battle turn counter — Shows current turn in battle header
+- [x] Coins display — Shows coins in hero sidebar (MapScreen)
+- [x] Smarter bot — Improved AI decision-making (PickMonsterMove: survival, aggression, buffing)
+- [x] **BUGFIX: Replay progress** — Fixed: replaying a battle no longer resets progress of defeated monsters
+
+## MEDIUM PRIORITY (5-15 min each)
+
+- [ ] Monster preview modal — Click monster on map to see stats/moves before fighting
+- [ ] Resource costs foundation — Add `hp_cost`, `mana_cost` fields to Move model (UI later)
+- [ ] Hero stat gain tooltip — Show +15 HP, +3 ATK, etc. when leveling up
+- [ ] Battle action log — Timestamped, filterable battle events
+
+## HARDER (15+ min each)
+
+- [ ] Attribute choice on level-up — Player selects which stats to boost when leveling
+- [ ] Hero classes — Class selection at run start (Knight/Rogue/Mage with different stats/moves)
+- [ ] Better battle animations — Expand existing shake effects, add move-specific effects
+- [ ] Status effects system — Implement bleed, poison, burn (new buff type architecture)
+
+## COMPLEX (45+ min)
+
+- [ ] Items & equipment — Drop system, inventory, equipping gear
+- [ ] Non-linear map — Multiple paths, branching encounters
+- [ ] Environmental effects — Map modifiers (rain reduces fire dmg, etc.)
+- [ ] Endless mode — Infinite scaling difficulty with different rewards
+
+## NOTES
+
+**Why these are prioritized:**
+1. Done items are polish + core features (99% complete)
+2. Medium items add nice QoL (monster preview is useful, stats foundation is needed)
+3. Harder items are new systems but require significant UI/logic
+4. Complex items need architecture refactors (item drop system, map generation)

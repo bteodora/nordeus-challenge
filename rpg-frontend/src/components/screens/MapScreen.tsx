@@ -6,7 +6,7 @@ import { MoveManagementModal } from '../ui/MoveManagementModal'
 import ShopModal from '../ui/ShopModal'
 
 export default function MapScreen() {
-  const { config, currentEncounterIndex, enterBattle, hero, equippedMoves, learnedMoves, equipMove } = useGameStore()
+  const { config, currentEncounterIndex, enterBattle, hero, equippedMoves, learnedMoves, equipMove, coins } = useGameStore()
   const [isManageMovesOpen, setIsManageMovesOpen] = useState(false)
   const [isShopOpen, setIsShopOpen] = useState(false)
 
@@ -19,7 +19,8 @@ export default function MapScreen() {
       {/* Sidebar: Hero Info */}
       <div className="w-1/4 bg-gray-800 rounded-2xl p-6 border border-gray-700 flex flex-col">
         <h2 className="text-2xl font-bold mb-2">Knight</h2>
-        <p className="text-gray-400 mb-6">Level {hero.level} • HP {hero.currentHp}/{hero.maxHp}</p>
+        <p className="text-gray-400 mb-1">Level {hero.level} • HP {hero.currentHp}/{hero.maxHp}</p>
+        <p className="text-amber-400 font-bold mb-6">💰 {coins} Coins</p>
         
         <h3 className="font-bold text-gray-300 mb-3 border-b border-gray-700 pb-2">Equipped Moves</h3>
         <div className="flex flex-col gap-2 flex-grow">
