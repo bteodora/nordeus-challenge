@@ -20,7 +20,7 @@ export default function PostEndlessScreen() {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-gradient-to-br from-purple-900/40 to-gray-900 rounded-xl border-2 border-purple-500/50 p-8"
+        className="w-full max-w-2xl bg-gradient-to-br from-purple-900/40 to-gray-900 rounded-xl border-2 border-purple-500/50 p-8 pixel-panel"
       >
         {/* Endless Run Summary */}
         <div className="text-center mb-8">

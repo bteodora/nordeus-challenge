@@ -51,7 +51,7 @@ export default function EndlessScreen() {
         style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(139,92,246,0.1) 40px, rgba(139,92,246,0.1) 41px), repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(139,92,246,0.1) 40px, rgba(139,92,246,0.1) 41px)' }}
       />
 
-      <div className="relative z-10 w-full max-w-2xl flex flex-col gap-5">
+      <div className="relative z-10 w-full max-w-2xl flex flex-col gap-5 pixel-panel">
         
         {/* Header — streak + hero HP */}
         <motion.div

@@ -31,12 +31,12 @@ export default function PostBattleScreen() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-xl bg-gradient-to-br from-green-900/30 to-gray-900 rounded-xl border-2 border-green-500/50 p-6"
+          className="w-full max-w-xl bg-gradient-to-br from-green-900/30 to-gray-900 rounded-xl border-2 border-green-500/50 p-6 pixel-panel"
         >
           {/* Victory Header */}
           <div className="text-center mb-6">
-            <div className="text-5xl mb-2">🎉</div>
-            <h1 className="text-3xl font-black text-green-400 mb-1">VICTORY!</h1>
+            <div className="text-5xl mb-2">⚔️</div>
+            <h1 className="text-3xl font-black text-green-300 mb-1 tracking-[0.2em]">VICTORY!</h1>
             <p className="text-gray-400 text-sm">Defeated {monster.name}</p>
           </div>
 
@@ -45,7 +45,7 @@ export default function PostBattleScreen() {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-sm"
+            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-sm pixel-panel"
           >
             <div className="grid grid-cols-3 gap-3">
               <div>
@@ -92,7 +92,7 @@ export default function PostBattleScreen() {
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 rounded-lg p-4 mb-4 border-2 border-purple-500/50"
+              className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 rounded-lg p-4 mb-4 border-2 border-purple-500/50 pixel-panel"
             >
               <h2 className="font-bold text-white text-sm mb-3 uppercase tracking-wider">✨ New Move Learned!</h2>
               <div className="bg-gray-900 rounded-lg p-3 mb-3 border border-purple-500/30 text-sm">
@@ -126,7 +126,7 @@ export default function PostBattleScreen() {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-xs"
+            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-xs pixel-panel"
           >
             <p className="text-gray-400 font-bold mb-2 uppercase">Battle Stats</p>
             <div className="grid grid-cols-2 gap-2">
@@ -141,7 +141,7 @@ export default function PostBattleScreen() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
             onClick={continueAfterBattle}
-            className="w-full py-3 px-6 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
+            className="w-full py-3 px-6 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95 pixel-button"
           >
             Continue to Next Battle →
           </motion.button>
@@ -150,12 +150,12 @@ export default function PostBattleScreen() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-xl bg-gradient-to-br from-red-900/30 to-gray-900 rounded-xl border-2 border-red-500/50 p-6"
+          className="w-full max-w-xl bg-gradient-to-br from-red-900/30 to-gray-900 rounded-xl border-2 border-red-500/50 p-6 pixel-panel"
         >
           {/* Defeat Screen */}
           <div className="text-center mb-6">
             <div className="text-5xl mb-2">💀</div>
-            <h1 className="text-3xl font-black text-red-400 mb-1">DEFEATED!</h1>
+            <h1 className="text-3xl font-black text-red-300 mb-1 tracking-[0.2em]">DEFEATED!</h1>
             <p className="text-gray-400 text-sm">You were defeated by {monster.name}</p>
           </div>
 
@@ -164,7 +164,7 @@ export default function PostBattleScreen() {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-sm"
+            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-sm pixel-panel"
           >
             <div className="grid grid-cols-3 gap-3">
               <div>
@@ -188,7 +188,7 @@ export default function PostBattleScreen() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
             onClick={continueAfterBattle}
-            className="w-full py-3 px-6 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
+            className="w-full py-3 px-6 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95 pixel-button"
           >
             Return to Map
           </motion.button>

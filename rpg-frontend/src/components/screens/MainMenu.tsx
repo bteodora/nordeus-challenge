@@ -9,6 +9,7 @@ export default function MainMenu() {
   const startEndless = useGameStore((s) => s.startEndless)
   const gotoEndless = () => startEndless()
   const [hasSave, setHasSave] = useState(false)
+  
 
   useEffect(() => {
     // Proveravamo da li postoji sačuvani run
@@ -24,49 +25,52 @@ export default function MainMenu() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 opacity-35 bg-[radial-gradient(circle_at_50%_30%,rgba(168,119,64,0.16),transparent_24%),radial-gradient(circle_at_12%_18%,rgba(27,74,39,0.2),transparent_18%),radial-gradient(circle_at_88%_18%,rgba(27,74,39,0.2),transparent_18%)]" />
       <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="text-center mb-12"
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        className="text-center mb-12 relative z-10"
       >
-        <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500 tracking-tighter drop-shadow-2xl mb-2">
+        <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-red-400 to-amber-500 tracking-tighter drop-shadow-2xl mb-2">
           RPG GAUNTLET
         </h1>
-        <p className="text-gray-400 text-lg tracking-widest">NORDEUS CHALLENGE</p>
+        <p className="text-gray-300 text-sm md:text-lg tracking-[0.35em]">NORDEUS CHALLENGE</p>
       </motion.div>
 
-      <motion.div 
-        className="flex flex-col gap-4 w-64"
+      <motion.div
+        className="flex flex-col gap-4 w-64 relative z-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <button
-          onClick={startNewRun}
-          className="flex items-center justify-center gap-2 py-4 px-6 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(220,38,38,0.5)]"
-        >
-          <Play size={20} /> START RUN
+        <button onClick={startNewRun} className="pixel-button">
+          <Play size={16} /> START RUN
         </button>
+
         {hasSave && (
-          <button
-            onClick={handleResume}
-            className="flex items-center justify-center gap-2 py-3 px-6 bg-green-700 hover:bg-green-600 text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
-          >
-            <RotateCcw size={20} /> RESUME
+          <button onClick={handleResume} className="pixel-button">
+            <RotateCcw size={16} /> RESUME
           </button>
         )}
-        <button className="flex items-center justify-center gap-2 py-3 px-6 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl transition-all">
-          <Settings size={20} /> SETTINGS
+
+        <button className="pixel-button">
+          <Settings size={16} /> SETTINGS
         </button>
-        <button onClick={gotoEndless} className="flex items-center justify-center gap-2 py-3 px-6 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl transition-all">
+
+        <button onClick={gotoEndless} className="pixel-button">
           Endless Mode
         </button>
-        <button className="flex items-center justify-center gap-2 py-3 px-6 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-xl transition-all">
-          <X size={20} /> EXIT
+
+        
+
+        <button className="pixel-button">
+          <X size={16} /> EXIT
         </button>
       </motion.div>
+
+      
     </div>
   )
 }

@@ -1,1 +1,115 @@
 @import "tailwindcss";
+
+/* Pixel-art dark fantasy theme globals */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+	--bg-1: #07060a; /* very dark */
+	--bg-2: #0f0810; /* dark purple */
+	--panel: #0b0a0e;
+	--accent: #d1a34a; /* gold */
+	--accent-2: #9b59b6; /* purple */
+	--muted: #9aa0a6;
+}
+
+html, body, #root {
+	height: 100%;
+}
+
+.pixel-ui {
+	font-family: 'Press Start 2P', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
+	background: radial-gradient(circle at 20% 10%, rgba(30,10,20,0.6) 0%, transparent 15%),
+							linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
+	color: #e6e1d9;
+	image-rendering: pixelated;
+	-webkit-font-smoothing: none;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Pixel panels */
+.pixel-panel {
+	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));
+	border: 3px solid rgba(0,0,0,0.8);
+	box-shadow: 6px 6px 0 rgba(0,0,0,0.6);
+	padding: 12px;
+	border-radius: 3px;
+}
+
+/* moss edging: tiny green pixels along the top-left edge */
+.pixel-panel::before {
+	content: '';
+	position: absolute;
+	pointer-events: none;
+	left: 6px;
+	top: -6px;
+	width: calc(100% - 12px);
+	height: 10px;
+	background-image: repeating-linear-gradient(90deg, #183a1a 0 2px, transparent 2px 6px, #2b6b2b 6px 8px);
+	opacity: 0.9;
+	mix-blend-mode: multiply;
+	border-radius: 2px;
+}
+
+/* Pixel buttons */
+.pixel-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 14px;
+	background: linear-gradient(180deg, #3a0f12, #2a0508);
+	color: var(--accent);
+	border: 3px solid #000;
+	box-shadow: 4px 4px 0 rgba(0,0,0,0.7);
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-size: 12px;
+}
+.pixel-button:hover { transform: translateY(-2px); }
+
+/* torch / ember glow on buttons */
+.pixel-button::after {
+	content: '';
+	display: block;
+	position: absolute;
+	pointer-events: none;
+	inset: 0;
+	box-shadow: inset 0 -8px 24px rgba(180,80,20,0.12), 0 6px 24px rgba(180,80,20,0.06);
+}
+
+/* ensure panels are positioned relative for pseudo-elements */
+.pixel-panel { position: relative; overflow: hidden; }
+
+/* small moss clumps on buttons */
+.pixel-button { position: relative; overflow: visible; }
+.pixel-button::before {
+	content: '';
+	position: absolute;
+	left: 6px;
+	bottom: -6px;
+	width: 18px;
+	height: 8px;
+	background-image: radial-gradient(circle at 25% 30%, #2e7b3c 0 3px, transparent 4px), radial-gradient(circle at 70% 60%, #1f5f2a 0 2px, transparent 3px);
+	transform: rotate(-6deg);
+	opacity: 0.95;
+}
+
+/* Scanlines / CRT overlay */
+.crt-overlay {
+	pointer-events: none;
+	position: fixed;
+	inset: 0;
+	mix-blend-mode: overlay;
+	background-image: linear-gradient(rgba(255,255,255,0.02) 1px, rgba(0,0,0,0) 1px);
+	background-size: 100% 3px;
+	opacity: 0.12;
+}
+
+/* Slight film grain */
+.grain {
+	position: fixed; inset: 0; pointer-events: none; mix-blend-mode: soft-light; opacity: 0.06;
+	background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><rect width="4" height="4" fill="black" opacity="0"/><circle cx="1" cy="1" r="0.8" fill="white" opacity="0.05"/></svg>');
+	background-size: 4px 4px;
+}
+
+/* Ensure images scaled look pixelated */
+img, canvas { image-rendering: pixelated; }
