@@ -18,21 +18,95 @@ html, body, #root {
 
 .pixel-ui {
 	font-family: 'Press Start 2P', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
-	background: radial-gradient(circle at 20% 10%, rgba(30,10,20,0.6) 0%, transparent 15%),
-							linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
 	color: #e6e1d9;
 	image-rendering: pixelated;
 	-webkit-font-smoothing: none;
 	-moz-osx-font-smoothing: grayscale;
 }
 
-/* Pixel panels */
+
+
+.forest-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease-out;
+}
+
+/* Novi stil za dugmiće - Rune na kamenju */
+.rune-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 18px;
+  
+  /* Izgled kamena */
+  /*background: url('/assets/stone-texture.png'); /* Pixel art tekstura kamena */
+  background-color: #2a2f33;
+  background-blend-mode: multiply;
+  
+  color: #ffc34d; /* Boja svetleće rune */
+  border: none;
+  border-radius: 8px;
+  
+  /* "Urezani" izgled teksta */
+  text-shadow: 1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+  
+  /* Pixelated ivice koristeći border-image */
+  border: 8px solid transparent;
+  border-image: url('/assets/pixel-border-stone.png') 8 stretch; /* Slika za ivicu */
+  
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  width: 100%;
+}
+
+.rune-button:hover::before {
+  content: '';
+  position: absolute;
+  inset: -4px; /* Malo veće od dugmeta */
+  background: radial-gradient(circle, rgba(255, 195, 77, 0.3) 0%, transparent 60%);
+  border-radius: 12px;
+  animation: pulse-glow 2s infinite ease-in-out;
+  z-index: -1;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+/* Stilizacija naslova - ako ne koristite sliku */
+.game-title-text {
+  font-size: 4rem; /* ili veći */
+  font-weight: black;
+  color: #c8bca0; /* Boja kamena */
+  text-shadow: 
+    /* Senka za 3D efekat */
+    0px 2px 0px #9a8f74,
+    0px 4px 0px #6d6452,
+    0px 6px 0px #423d33,
+    /* Unutrašnja senka za urezani izgled */
+    inset 0px -2px 1px rgba(0,0,0,0.4);
+  letter-spacing: 0.1em;
+}
+
 .pixel-panel {
-	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));
-	border: 3px solid rgba(0,0,0,0.8);
-	box-shadow: 6px 6px 0 rgba(0,0,0,0.6);
-	padding: 12px;
-	border-radius: 3px;
+  border: 12px solid transparent;
+  border-image: url('/assets/pixel-border-wood.png') 12 stretch;
+  background-color: rgba(11, 10, 14, 0.85); /* Malo manje prozirno za bolju čitljivost */
+  backdrop-filter: blur(4px);
+  box-shadow: none;
+  border-radius: 0px;
+  position: relative; /* Dodajemo position relative za pseudo-elemente */
+  overflow: hidden;  /* Dodajemo overflow hidden */
 }
 
 /* moss edging: tiny green pixels along the top-left edge */
