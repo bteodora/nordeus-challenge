@@ -114,7 +114,6 @@ export default function MainMenu() {
                 alt="RPG Gauntlet"
                 className="w-72 md:w-96 mx-auto"
                 onError={(e) => {
-                  // Fallback if image missing
                   const el = e.currentTarget
                   el.style.display = 'none'
                   el.nextElementSibling?.removeAttribute('hidden')
@@ -174,8 +173,6 @@ export default function MainMenu() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <button className="pixel-button flex-1 justify-center text-[8px]">Settings</button>
-          <button className="pixel-button flex-1 justify-center text-[8px]">Credits</button>
         </motion.div>
       </div>
 
