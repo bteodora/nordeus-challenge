@@ -1,20 +1,79 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
 import { fetchEndlessMonster } from '../../api/endless'
-import { Swords, Heart, Zap, Shield, Star } from 'lucide-react'
+import { Swords, Shield, Zap, Heart, Star, Crown } from 'lucide-react'
+import { getSpriteForName } from '../sprites/sprites'
 
-const DIFFICULTY_COLORS = ['', 'text-green-400', 'text-yellow-400', 'text-orange-400', 'text-red-400', 'text-purple-400']
-const DIFFICULTY_LABELS = ['', 'Weak', 'Common', 'Dangerous', 'Deadly', 'Legendary']
+// Tiny inline sprite canvas for endless card
+function MonsterPortrait({ name, scale = 3 }: { name: string; scale?: number }) {
+  // Standardni hook pozivi - moraju biti na vrhu funkcije bez require/import
+  const canvasEl = useRef<HTMLCanvasElement>(null);
+  const sprite = getSpriteForName(name);
+
+  useEffect(() => {
+    const canvas = canvasEl.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const pixels = sprite.idle;
+    const rows = pixels.length;
+    const cols = pixels[0]?.length || 0;
+
+    canvas.width = cols * scale;
+    canvas.height = rows * scale;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Horizontalni flip (mirror)
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const c = pixels[y][x];
+        if (c === 0) continue;
+        ctx.fillStyle = sprite.palette[c] ?? '#ff00ff';
+        ctx.fillRect(x * scale, y * scale, scale, scale);
+      }
+    }
+    ctx.restore();
+  }, [name, scale, sprite]);
+
+  return (
+    <canvas
+      ref={canvasEl}
+      style={{ 
+        imageRendering: 'pixelated', 
+        display: 'block',
+        filter: `drop-shadow(0 0 8px ${sprite.color})` 
+      }}
+    />
+  );
+}
+
+const DIFF_COLOR = ['', '#4ade80', '#facc15', '#fb923c', '#f87171', '#c084fc']
+const DIFF_LABEL = ['', 'Weak', 'Common', 'Dangerous', 'Deadly', 'Legendary']
+
+function StatPill({ label, value, color }: { label: string; value: any; color: string }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5 flex-1 py-2"
+      style={{ background: 'rgba(0,0,0,0.3)', borderTop: `2px solid ${color}22` }}>
+      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: 'var(--mute-text)', letterSpacing: '0.15em' }}>{label}</span>
+      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color }}>{value}</span>
+    </div>
+  )
+}
 
 export default function EndlessScreen() {
   const { hero, enterBattleWithMonster, endlessWins, applyRegen } = useGameStore() as any
   const [payload, setPayload] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadNext()
-  }, [endlessWins])
+  useEffect(() => { loadNext() }, [endlessWins])
 
   async function loadNext() {
     setLoading(true)
@@ -23,8 +82,7 @@ export default function EndlessScreen() {
       setPayload(res)
       if (endlessWins > 0 && res?.regen_every && res?.regen_amount_pct) {
         if (endlessWins % res.regen_every === 0) {
-          const amount = Math.round((hero.maxHp || 100) * res.regen_amount_pct)
-          applyRegen(amount)
+          applyRegen(Math.round((hero.maxHp || 100) * res.regen_amount_pct))
         }
       }
     } catch (e) {
@@ -34,184 +92,181 @@ export default function EndlessScreen() {
     }
   }
 
-  function startBattle() {
-    if (!payload) return
-    enterBattleWithMonster(payload.monster, payload.upcoming)
-  }
-
-  const hpPercent = Math.round((hero.currentHp / hero.maxHp) * 100)
-  const hpColor = hpPercent > 60 ? '#4ade80' : hpPercent > 30 ? '#facc15' : '#f87171'
+  const hpPct   = hero.currentHp / hero.maxHp
+  const hpClass = hpPct > 0.5 ? 'hp-high' : hpPct > 0.25 ? 'hp-mid' : 'hp-low'
+  const hpColor = hpPct > 0.5 ? '#4ade80' : hpPct > 0.25 ? '#facc15' : '#f87171'
 
   return (
-    <div className="w-full h-full bg-black flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      
-      {/* Atmospheric background */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#1a0a2e_0%,_#000_60%)]" />
-      <div className="absolute inset-0 opacity-20"
-        style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(139,92,246,0.1) 40px, rgba(139,92,246,0.1) 41px), repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(139,92,246,0.1) 40px, rgba(139,92,246,0.1) 41px)' }}
-      />
+    <div className="w-full h-full flex flex-col items-center justify-center p-4 relative overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(16,8,40,0.9), transparent), linear-gradient(180deg, var(--deep), var(--ink))' }}>
 
-      <div className="relative z-10 w-full max-w-2xl flex flex-col gap-5 pixel-panel">
-        
-        {/* Header — streak + hero HP */}
+      {/* Arcane grid pattern */}
+      <div className="absolute inset-0 pointer-events-none opacity-10" style={{
+        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(94,46,144,0.15) 38px, rgba(94,46,144,0.15) 39px), repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(94,46,144,0.15) 38px, rgba(94,46,144,0.15) 39px)',
+      }} />
+
+      <div className="relative z-10 w-full max-w-lg flex flex-col gap-4">
+
+        {/* ── Header: Streak + Crown ── */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between"
         >
-          <div>
-            <p className="text-purple-400 text-xs uppercase tracking-[0.3em] font-bold">Endless Gauntlet</p>
-            <div className="flex items-center gap-2 mt-1">
-              <Star size={18} className="text-yellow-400 fill-yellow-400" />
-              <span className="text-3xl font-black text-white">{endlessWins}</span>
-              <span className="text-gray-500 text-sm">wins</span>
+          <div className="flex items-center gap-3">
+            <Crown size={18} style={{ color: 'var(--arcane-lt)' }} />
+            <div>
+              <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: 'var(--arcane-lt)', letterSpacing: '0.25em' }}>ENDLESS GAUNTLET</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Star size={12} style={{ color: 'var(--gold)', fill: 'var(--gold)' }} />
+                <span className="streak-number" style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 20, color: 'var(--gold)' }}>{endlessWins}</span>
+                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: 'var(--mute-text)' }}>wins</span>
+              </div>
             </div>
           </div>
 
+          {/* Hero HP */}
           <div className="text-right">
-            <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Hero HP</p>
-            <div className="flex items-center gap-2 justify-end">
-              <Heart size={14} style={{ color: hpColor }} />
-              <span className="font-bold text-lg" style={{ color: hpColor }}>
-                {hero.currentHp}/{hero.maxHp}
-              </span>
+            <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: 'var(--mute-text)', letterSpacing: '0.15em', marginBottom: 4 }}>HERO HP</p>
+            <div className="flex items-center gap-2 justify-end mb-1">
+              <Heart size={10} style={{ color: hpColor }} />
+              <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10, color: hpColor }}>{hero.currentHp}/{hero.maxHp}</span>
             </div>
-            {/* HP bar */}
-            <div className="w-32 h-1.5 bg-gray-800 rounded-full mt-1.5 overflow-hidden">
-              <motion.div
-                className="h-full rounded-full"
-                style={{ backgroundColor: hpColor }}
-                animate={{ width: `${hpPercent}%` }}
-                transition={{ duration: 0.5 }}
-              />
+            <div className="hp-track w-32">
+              <motion.div className={`hp-fill ${hpClass}`} animate={{ width: `${hpPct * 100}%` }} transition={{ duration: 0.5, type: 'spring' }} />
             </div>
-            {/* Regen info */}
-            {payload && payload.regen_every && (
-              <p className="text-xs text-green-500 mt-1">
-                +{Math.round(payload.regen_amount_pct * 100)}% HP regen every {payload.regen_every} wins
+            {payload?.regen_every && (
+              <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: '#4ade80', marginTop: 4 }}>
+                +{Math.round(payload.regen_amount_pct * 100)}% HP every {payload.regen_every} wins
               </p>
             )}
           </div>
         </motion.div>
 
-        {/* Hero stats strip */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="flex gap-3"
-        >
+        {/* ── Hero stat strip ── */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
+          className="panel flex overflow-hidden" style={{ padding: 0 }}>
           {[
-            { icon: <Heart size={12} />, label: 'ATK', value: hero.stats?.attack, color: 'text-red-400' },
-            { icon: <Shield size={12} />, label: 'DEF', value: hero.stats?.defense, color: 'text-blue-400' },
-            { icon: <Zap size={12} />, label: 'MAG', value: hero.stats?.magic, color: 'text-purple-400' },
-            { icon: <Star size={12} />, label: `LVL`, value: hero.level, color: 'text-yellow-400' },
+            { label: 'ATK', value: hero.stats?.attack,  color: '#fb923c' }, // Promenjeno val -> value
+            { label: 'DEF', value: hero.stats?.defense, color: '#60a5fa' },
+            { label: 'MAG', value: hero.stats?.magic,   color: '#c084fc' },
+            { label: 'LVL', value: hero.level,          color: 'var(--gold)' },
           ].map((s) => (
-            <div key={s.label} className="flex-1 bg-gray-900/80 border border-gray-800 rounded-lg p-2 text-center">
-              <p className={`text-xs font-bold ${s.color}`}>{s.label}</p>
-              <p className="text-white font-black text-lg">{s.value}</p>
-            </div>
+            <StatPill key={s.label} {...s} />
           ))}
         </motion.div>
 
-        {/* Main monster card */}
+        {/* ── Monster card ── */}
         <AnimatePresence mode="wait">
           {loading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="bg-gray-900/60 border border-gray-800 rounded-2xl p-8 text-center"
-            >
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="panel panel-arcane flex flex-col items-center justify-center py-10 gap-4">
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                className="text-4xl inline-block mb-3"
-              >⚔️</motion.div>
-              <p className="text-gray-400">Summoning next challenger...</p>
+                transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
+                style={{ fontSize: 28 }}
+              >⚔</motion.div>
+              <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: 'var(--arcane-lt)', letterSpacing: '0.15em', animation: 'mist-breathe 2s ease-in-out infinite alternate' }}>
+                Summoning challenger…
+              </p>
             </motion.div>
           ) : payload ? (
-            <motion.div
-              key={payload.monster?.id}
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            <motion.div key={payload.monster?.id}
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-gray-900/80 border border-gray-700 rounded-2xl overflow-hidden"
+              className="panel panel-blood overflow-hidden"
+              style={{ padding: 0 }}
             >
               {/* Monster header */}
-              <div className="bg-gradient-to-r from-red-950/60 to-gray-900/60 p-5 border-b border-gray-800 flex items-center justify-between">
+              <div className="flex items-center justify-between p-4"
+                style={{ background: 'linear-gradient(135deg, rgba(100,18,18,0.5), rgba(30,6,6,0.8))', borderBottom: '1px solid var(--blood)' }}>
                 <div className="flex items-center gap-4">
-                  <div className="text-5xl">👹</div>
+                  {/* Portrait */}
+                  <div style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <MonsterPortrait name={payload.monster.name} scale={3} />
+                  </div>
                   <div>
-                    <h2 className="text-2xl font-black text-white">{payload.monster.name}</h2>
-                    <p className={`text-sm font-bold ${DIFFICULTY_COLORS[payload.monster.difficulty] || 'text-gray-400'}`}>
-                      {'⚔️'.repeat(payload.monster.difficulty)} {DIFFICULTY_LABELS[payload.monster.difficulty] || ''}
-                    </p>
+                    <h2 style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: 'var(--ink-text)', marginBottom: 4 }}>
+                      {payload.monster.name}
+                    </h2>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: payload.monster.difficulty }).map((_,i) => (
+                        <span key={i} style={{ fontSize: 8, color: DIFF_COLOR[payload.monster.difficulty] }}>⚔</span>
+                      ))}
+                      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: DIFF_COLOR[payload.monster.difficulty], marginLeft: 4 }}>
+                        {DIFF_LABEL[payload.monster.difficulty]}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-gray-500 text-xs">Reward</p>
-                  <p className="text-yellow-400 font-black text-xl">💰 {payload.coins}</p>
+                  <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: 'var(--mute-text)', marginBottom: 2 }}>REWARD</p>
+                  <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 13, color: 'var(--gold)' }}>💰 {payload.coins}</p>
                 </div>
               </div>
 
-              {/* Monster stats */}
-              <div className="grid grid-cols-4 gap-0 border-b border-gray-800">
+              {/* Monster stats grid */}
+              <div className="grid grid-cols-4" style={{ borderBottom: '1px solid var(--rim)' }}>
                 {[
-                  { label: 'HP', value: payload.monster.stats?.health, color: 'text-red-400' },
-                  { label: 'ATK', value: payload.monster.stats?.attack, color: 'text-orange-400' },
-                  { label: 'DEF', value: payload.monster.stats?.defense, color: 'text-blue-400' },
-                  { label: 'MAG', value: payload.monster.stats?.magic, color: 'text-purple-400' },
+                  { label: 'HP',  val: payload.monster.stats?.health,  color: '#f87171' },
+                  { label: 'ATK', val: payload.monster.stats?.attack,  color: '#fb923c' },
+                  { label: 'DEF', val: payload.monster.stats?.defense, color: '#60a5fa' },
+                  { label: 'MAG', val: payload.monster.stats?.magic,   color: '#c084fc' },
                 ].map((s, i) => (
-                  <div key={s.label} className={`p-3 text-center ${i < 3 ? 'border-r border-gray-800' : ''}`}>
-                    <p className="text-gray-500 text-xs">{s.label}</p>
-                    <p className={`font-bold text-lg ${s.color}`}>{s.value}</p>
+                  <div key={s.label} className="flex flex-col items-center py-2"
+                    style={{ borderRight: i < 3 ? '1px solid var(--rim)' : 'none' }}>
+                    <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: 'var(--mute-text)' }}>{s.label}</span>
+                    <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: s.color }}>{s.val}</span>
                   </div>
                 ))}
               </div>
 
               {/* Fight button */}
-              <div className="p-4">
+              <div className="p-3">
                 <motion.button
-                  onClick={startBattle}
+                  onClick={() => enterBattleWithMonster(payload.monster, payload.upcoming)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  className="w-full py-4 bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white font-black text-lg rounded-xl flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all"
+                  className="w-full py-4 flex items-center justify-center gap-3"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(120,20,20,0.9), rgba(60,8,8,0.96))',
+                    border: '1px solid var(--blood-lt)',
+                    color: '#f87171',
+                    fontFamily: "'Press Start 2P', monospace",
+                    fontSize: 11,
+                    letterSpacing: '0.2em',
+                    boxShadow: '0 0 24px rgba(138,24,24,0.3)',
+                    clipPath: 'polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px))',
+                    cursor: 'pointer',
+                  }}
                 >
-                  <Swords size={22} /> FIGHT
+                  <Swords size={16} /> FIGHT
                 </motion.button>
               </div>
             </motion.div>
           ) : null}
         </AnimatePresence>
 
-        {/* Upcoming encounters */}
+        {/* ── Upcoming encounters ── */}
         {payload?.upcoming?.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <p className="text-gray-600 text-xs uppercase tracking-widest mb-2">Upcoming</p>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <div className="rune-line mb-2" style={{ fontSize: 6 }}>upcoming</div>
             <div className="flex gap-2">
               {payload.upcoming.slice(0, 3).map((u: any, i: number) => (
-                <div key={i} className="flex-1 bg-gray-900/60 border border-gray-800 rounded-xl p-3">
+                <div key={i} className="panel flex-1 p-2 text-center">
+                  <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: 'var(--mute-text)', marginBottom: 2 }}>#{i + 2}</p>
                   {u.type === 'monster' ? (
                     <>
-                      <p className="text-xs text-gray-400 mb-0.5">#{i + 2}</p>
-                      <p className="font-bold text-sm text-white truncate">{u.monster?.name}</p>
-                      <p className={`text-xs ${DIFFICULTY_COLORS[u.monster?.difficulty] || 'text-gray-500'}`}>
-                        {'⚔️'.repeat(u.monster?.difficulty || 1)}
+                      <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: 'var(--ink-text)' }}>{u.monster?.name?.slice(0, 7)}</p>
+                      <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: DIFF_COLOR[u.monster?.difficulty] || 'var(--mute-text)' }}>
+                        {'⚔'.repeat(u.monster?.difficulty || 1)}
                       </p>
                     </>
                   ) : (
-                    <>
-                      <p className="text-xs text-gray-400 mb-0.5">Event</p>
-                      <p className="font-bold text-sm text-green-400">
-                        {u.event === 'heal' ? '💚 Heal' : '⬆️ Buff'}
-                      </p>
-                    </>
+                    <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: '#4ade80' }}>
+                      {u.event === 'heal' ? '♥ Heal' : '↑ Buff'}
+                    </p>
                   )}
                 </div>
               ))}
@@ -219,13 +274,14 @@ export default function EndlessScreen() {
           </motion.div>
         )}
 
-        {/* Exit button */}
+        {/* ── Exit ── */}
         <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
           onClick={() => useGameStore.getState().exitToMenu()}
-          className="text-gray-600 hover:text-gray-400 text-sm transition-colors text-center"
+          className="text-center transition-colors"
+          style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: 'var(--mute-text)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.1em' }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--dim-text)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--mute-text)')}
         >
           ← Exit to Menu
         </motion.button>

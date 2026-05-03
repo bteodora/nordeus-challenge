@@ -6,7 +6,6 @@ import PostBattleScreen from './components/screens/PostBattleScreen'
 import PostEndlessScreen from './components/screens/PostEndlessScreen'
 import EndlessScreen from './components/screens/EndlessScreen'
 import ForestAmbience from './components/ui/ForestAmbience'
-import ForestFrame from './components/ui/ForestFrame'
 import { AnimatePresence, motion } from 'framer-motion'
 
 // Page transition wrapper
@@ -42,7 +41,7 @@ export default function App() {
       <div className="vignette" />
 
       {/* ── Forest decorative frame ── */}
-      <ForestFrame>
+  
         {/* ── Screen content ── */}
         <div className="relative w-full h-full" style={{ zIndex: 5 }}>
           <AnimatePresence mode="wait">
@@ -54,7 +53,7 @@ export default function App() {
             {screen === 'endless'    && <PageTransition id="endless"><EndlessScreen /></PageTransition>}
           </AnimatePresence>
         </div>
-      </ForestFrame>
+
 
       {/* ── Overlays (topmost) ── */}
       <div className="crt-overlay" />

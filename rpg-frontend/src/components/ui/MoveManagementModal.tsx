@@ -12,21 +12,72 @@ interface MoveManagementModalProps {
 }
 
 const effectIcons: Record<string, ReactNode> = {
-  damage: <Swords size={16} />,
-  heal: <Heart size={16} />,
-  buff: <Shield size={16} />,
-  debuff: <Zap size={16} />,
-  damage_debuff: <Zap size={16} />,
-  buff_self_damage: <Shield size={16} />,
+  damage:           <Swords size={10} />,
+  heal:             <Heart  size={10} />,
+  buff:             <Shield size={10} />,
+  debuff:           <Zap    size={10} />,
+  damage_debuff:    <Zap    size={10} />,
+  buff_self_damage: <Shield size={10} />,
 }
 
-export function MoveManagementModal({
-  isOpen,
-  onClose,
-  allMoves,
-  equippedMoves,
-  onEquipMove,
-}: MoveManagementModalProps) {
+const typeColor = (t: string) => t === 'physical' ? '#fb923c' : '#c084fc'
+
+function MoveRow({
+  move, slot, onEquip, equipped, equippedSlot,
+}: {
+  move: Move
+  slot?: number
+  onEquip?: (slot: number) => void
+  equipped?: boolean
+  equippedSlot?: number
+}) {
+  const tc = typeColor(move.type)
+  return (
+    <div
+      className="flex items-center justify-between gap-2 p-2 transition-colors"
+      style={{
+        background: equipped ? `rgba(${move.type === 'physical' ? '251,146,60' : '192,132,252'},0.07)` : 'rgba(0,0,0,0.25)',
+        borderLeft: `2px solid ${tc}${equipped ? 'aa' : '33'}`,
+      }}
+    >
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span style={{ color: tc, flexShrink: 0 }}>{effectIcons[move.effect.split('_')[0]] || <Swords size={10} />}</span>
+        <div className="min-w-0">
+          <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: equipped ? 'var(--ink-text)' : 'var(--dim-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {move.name}
+          </p>
+          <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: 'var(--mute-text)', marginTop: 2 }}>
+            {move.type} · {move.effect} · {move.base_value}
+          </p>
+        </div>
+      </div>
+
+      {/* Slot buttons or equipped badge */}
+      <div className="flex gap-1 flex-shrink-0">
+        {equipped ? (
+          <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: tc, background: `${tc}22`, padding: '3px 6px', border: `1px solid ${tc}44` }}>
+            S{(equippedSlot ?? 0) + 1}
+          </span>
+        ) : onEquip ? (
+          [0, 1, 2, 3].map(s => (
+            <motion.button
+              key={s}
+              onClick={() => onEquip(s)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.92 }}
+              className="pixel-button"
+              style={{ padding: '3px 6px', fontSize: 6 }}
+            >
+              S{s + 1}
+            </motion.button>
+          ))
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+export function MoveManagementModal({ isOpen, onClose, allMoves, equippedMoves, onEquipMove }: MoveManagementModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -35,146 +86,94 @@ export function MoveManagementModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          className="modal-bg"
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border-2 border-indigo-500/50 p-8 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+            initial={{ scale: 0.94, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0 }}
+            transition={{ type: 'spring', bounce: 0.18 }}
+            onClick={e => e.stopPropagation()}
+            className="panel panel-arcane w-full max-w-3xl overflow-hidden"
+            style={{ maxHeight: '82vh', display: 'flex', flexDirection: 'column' }}
           >
             {/* Header */}
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-black text-indigo-400">⚔️ MOVE MANAGEMENT</h1>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <X size={24} className="text-gray-400" />
+            <div className="flex items-center justify-between px-5 py-4"
+              style={{ borderBottom: '1px solid var(--arcane-dk)', flexShrink: 0 }}>
+              <div>
+                <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: 'var(--arcane-lt)', letterSpacing: '0.25em', marginBottom: 4 }}>
+                  ✦ ARCANE CODEX
+                </p>
+                <h2 style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 12, color: 'var(--ink-text)' }}>
+                  Move Management
+                </h2>
+              </div>
+              <button onClick={onClose} className="pixel-button p-2">
+                <X size={14} />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-8">
-              {/* Equipped Moves Section */}
-              <div className="bg-gray-900/50 rounded-xl p-6 border border-green-500/30">
-                <h2 className="font-bold text-green-400 mb-4 uppercase tracking-wider text-sm">
-                  📍 Currently Equipped (4 slots)
-                </h2>
-                <div className="flex flex-col gap-3">
-                  {equippedMoves.map((move, slot) => (
-                    <motion.div
-                      key={slot}
-                      className="relative group"
-                    >
-                      <div className="bg-green-900/40 border-2 border-green-500/50 rounded-lg p-4 cursor-pointer hover:bg-green-900/60 transition-all">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-bold text-green-300">{move.name}</p>
-                            <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                              {effectIcons[move.effect.split('_')[0]] || <Swords size={14} />}
-                              <span className={move.type === 'physical' ? 'text-orange-400' : 'text-purple-400'}>
-                                {move.type}
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-xs font-bold text-green-500 bg-green-900/60 px-2 py-1 rounded">
-                            Slot {slot + 1}
-                          </span>
-                        </div>
-                      </div>
+            {/* Body */}
+            <div className="flex gap-0 flex-1 min-h-0 overflow-hidden">
 
-                      {/* Tooltip */}
-                      <div className="absolute left-0 right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-xs z-10 shadow-xl">
-                        <p className="text-gray-300 mb-1">{move.description}</p>
-                        <p className="text-gray-500">Base: {move.base_value} | Effect: {move.effect}</p>
-                      </div>
-                    </motion.div>
+              {/* Left — equipped */}
+              <div className="flex flex-col overflow-y-auto"
+                style={{ width: '44%', borderRight: '1px solid var(--rim)', padding: '12px' }}>
+                <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: '#4ade80', letterSpacing: '0.2em', marginBottom: 8 }}>
+                  📍 Equipped (4 slots)
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  {equippedMoves.map((move, slot) => (
+                    <MoveRow key={slot} move={move} equipped equippedSlot={slot} />
+                  ))}
+                  {/* Empty slots */}
+                  {Array.from({ length: Math.max(0, 4 - equippedMoves.length) }).map((_, i) => (
+                    <div key={i} className="p-2 flex items-center"
+                      style={{ background: 'rgba(0,0,0,0.2)', borderLeft: '2px solid var(--rim)' }}>
+                      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: 'var(--mute-text)' }}>
+                        Slot {equippedMoves.length + i + 1} — empty
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Available Moves Section */}
-              <div className="bg-gray-900/50 rounded-xl p-6 border border-indigo-500/30">
-                <h2 className="font-bold text-indigo-400 mb-4 uppercase tracking-wider text-sm">
-                  📚 Available Moves ({allMoves.length})
-                </h2>
-                <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
-                  {allMoves.map((move) => {
-                    const equippedSlot = equippedMoves.findIndex((m) => m.id === move.id)
-                    const isCurrentlyEquipped = equippedSlot !== -1
-
+              {/* Right — all moves */}
+              <div className="flex flex-col overflow-y-auto flex-1"
+                style={{ padding: '12px' }}>
+                <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: 'var(--arcane-lt)', letterSpacing: '0.2em', marginBottom: 8 }}>
+                  📚 All Moves ({allMoves.length})
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  {allMoves.map(move => {
+                    const eqIdx = equippedMoves.findIndex(m => m.id === move.id)
+                    const isEq  = eqIdx !== -1
                     return (
-                      <motion.div
+                      <MoveRow
                         key={move.id}
-                        className="relative group"
-                      >
-                        <div
-                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                            isCurrentlyEquipped
-                              ? 'bg-indigo-900/60 border-indigo-500/80'
-                              : 'bg-gray-800 border-gray-700 hover:bg-gray-700/80'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <p className="font-bold text-sm text-white">{move.name}</p>
-                              <div className="flex items-center gap-2 mt-0.5 text-xs">
-                                {effectIcons[move.effect.split('_')[0]] || <Swords size={12} />}
-                                <span
-                                  className={
-                                    move.type === 'physical' ? 'text-orange-400' : 'text-purple-400'
-                                  }
-                                >
-                                  {move.type}
-                                </span>
-                              </div>
-                            </div>
-
-                            {isCurrentlyEquipped ? (
-                              <span className="text-xs font-bold text-indigo-300 bg-indigo-900/60 px-2 py-1 rounded">
-                                Slot {equippedSlot + 1}
-                              </span>
-                            ) : (
-                              <div className="flex gap-1">
-                                {[0, 1, 2, 3].map((slot) => (
-                                  <motion.button
-                                    key={slot}
-                                    onClick={() => onEquipMove(move, slot)}
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="text-xs px-2 py-1 rounded bg-indigo-600/50 hover:bg-indigo-600 text-indigo-200 transition-colors font-bold"
-                                  >
-                                    S{slot + 1}
-                                  </motion.button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Tooltip */}
-                        <div className="absolute left-0 right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-xs z-10 shadow-xl">
-                          <p className="text-gray-300 mb-1">{move.description}</p>
-                          <p className="text-gray-500">Base: {move.base_value} | Effect: {move.effect}</p>
-                        </div>
-                      </motion.div>
+                        move={move}
+                        equipped={isEq}
+                        equippedSlot={isEq ? eqIdx : undefined}
+                        onEquip={isEq ? undefined : (slot) => onEquipMove(move, slot)}
+                      />
                     )
                   })}
                 </div>
               </div>
             </div>
 
-            {/* Close Button */}
-            <motion.button
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              onClick={onClose}
-              className="w-full mt-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-all"
-            >
-              Done (Close)
-            </motion.button>
+            {/* Footer */}
+            <div className="px-5 py-3 flex-shrink-0" style={{ borderTop: '1px solid var(--rim)' }}>
+              <motion.button
+                onClick={onClose}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 pixel-button justify-center"
+                style={{ color: 'var(--arcane-lt)', borderColor: 'var(--arcane-dk)', fontSize: 8, letterSpacing: '0.2em' }}
+              >
+                Close Codex
+              </motion.button>
+            </div>
           </motion.div>
         </motion.div>
       )}

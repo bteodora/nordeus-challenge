@@ -1,117 +1,139 @@
 import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
+import { Crown, Swords, Heart, Shield, Zap, ChevronRight } from 'lucide-react'
+
+function StatRow({ label, value, color }: { label: string; value: any; color: string }) {
+  return (
+    <div className="flex items-center justify-between py-2"
+      style={{ borderBottom: '1px solid var(--rim)' }}>
+      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: 'var(--dim-text)' }}>{label}</span>
+      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color }}>{value}</span>
+    </div>
+  )
+}
 
 export default function PostEndlessScreen() {
-  const {
-    hero,
-    coins,
-    runStats,
-    endlessWins,
-    exitToMenu,
-  } = useGameStore()
+  const { hero, coins, runStats, endlessWins, exitToMenu } = useGameStore()
 
-  const handleReturnToMenu = () => {
-    // Reset endless state and return to menu
-    exitToMenu()
-  }
+  const stagger = (i: number) => ({ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.15 + i * 0.08 } })
 
   return (
-    <div className="w-full h-screen bg-gradient-to-b from-gray-900 to-black overflow-y-auto p-4 flex items-start justify-center pt-8">
+    <div className="w-full h-full flex items-center justify-center p-4 overflow-y-auto relative"
+      style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(60,20,90,0.4), transparent), linear-gradient(180deg, var(--deep), var(--ink))' }}>
+
+      {/* Arcane grid */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        opacity: 0.08,
+        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(94,46,144,0.3) 38px, rgba(94,46,144,0.3) 39px), repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(94,46,144,0.3) 38px, rgba(94,46,144,0.3) 39px)',
+      }} />
+
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-gradient-to-br from-purple-900/40 to-gray-900 rounded-xl border-2 border-purple-500/50 p-8 pixel-panel"
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="panel panel-arcane w-full max-w-lg relative z-10"
+        style={{ padding: 0, overflow: 'hidden' }}
       >
-        {/* Endless Run Summary */}
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-3">⚔️</div>
-          <h1 className="text-4xl font-black text-purple-400 mb-2">ENDLESS RUN COMPLETE</h1>
-          <p className="text-gray-300 text-lg">You lasted <span className="text-yellow-400 font-bold">{endlessWins}</span> rounds</p>
+        {/* ── Hero banner ── */}
+        <div className="flex flex-col items-center py-8 px-6"
+          style={{ background: 'linear-gradient(180deg, rgba(60,20,90,0.5), rgba(20,8,35,0.8))', borderBottom: '1px solid var(--arcane-dk)' }}>
+          <motion.div
+            initial={{ scale: 0.3, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, type: 'spring', bounce: 0.5 }}
+          >
+            <Crown size={40} style={{ color: 'var(--gold)' }} />
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: 'var(--arcane-lt)',
+              textShadow: '0 0 20px rgba(155,110,224,0.6)', marginTop: 12, marginBottom: 6, letterSpacing: '0.1em' }}
+          >
+            RUN COMPLETE
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.28 }}
+            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: 'var(--dim-text)' }}
+          >
+            You survived{' '}
+            <span className="streak-number" style={{ color: 'var(--gold)', fontSize: 13 }}>{endlessWins}</span>
+            {' '}rounds
+          </motion.p>
         </div>
 
-        {/* Rewards Grid */}
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-3 gap-4 mb-8"
-        >
-          {/* Coins */}
-          <div className="bg-gray-800/60 rounded-lg p-6 border border-yellow-500/30 text-center">
-            <div className="text-4xl mb-2">💰</div>
-            <p className="text-gray-400 text-sm uppercase mb-1">Coins Earned</p>
-            <p className="text-2xl font-bold text-yellow-400">{coins}</p>
-          </div>
+        {/* ── Rewards ── */}
+        <div className="p-5 flex flex-col gap-4">
 
-          {/* XP */}
-          <div className="bg-gray-800/60 rounded-lg p-6 border border-blue-500/30 text-center">
-            <div className="text-4xl mb-2">⭐</div>
-            <p className="text-gray-400 text-sm uppercase mb-1">XP Gained</p>
-            <p className="text-2xl font-bold text-blue-400">{hero.xp}</p>
-          </div>
+          {/* Big 3 */}
+          <motion.div {...stagger(0)} className="grid grid-cols-3 gap-2">
+            {[
+              { emoji: '💰', label: 'Coins', value: coins,      color: 'var(--gold)' },
+              { emoji: '⭐', label: 'XP',    value: hero.xp,    color: '#60a5fa' },
+              { emoji: '🏆', label: 'Level', value: hero.level, color: '#4ade80' },
+            ].map(r => (
+              <div key={r.label} className="panel flex flex-col items-center py-3 gap-1">
+                <span style={{ fontSize: 20 }}>{r.emoji}</span>
+                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: 'var(--mute-text)' }}>{r.label}</span>
+                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 13, color: r.color }}>{r.value}</span>
+              </div>
+            ))}
+          </motion.div>
 
-          {/* Level */}
-          <div className="bg-gray-800/60 rounded-lg p-6 border border-green-500/30 text-center">
-            <div className="text-4xl mb-2">🏆</div>
-            <p className="text-gray-400 text-sm uppercase mb-1">Hero Level</p>
-            <p className="text-2xl font-bold text-green-400">{hero.level}</p>
-          </div>
-        </motion.div>
-
-        {/* Stat Summary */}
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-700"
-        >
-          <h3 className="text-gray-400 font-bold uppercase text-sm mb-4">Current Stats</h3>
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <p className="text-gray-500 text-xs uppercase">Health</p>
-              <p className="text-xl font-bold text-red-400">{hero.stats.health}</p>
+          {/* Final stats */}
+          <motion.div {...stagger(1)} className="panel p-3">
+            <p className="rune-line mb-3" style={{ fontSize: 6 }}>final stats</p>
+            <div className="flex gap-1">
+              {[
+                { icon: <Heart  size={10} />, label: 'HP',  val: hero.stats.health,  color: '#f87171' },
+                { icon: <Swords size={10} />, label: 'ATK', val: hero.stats.attack,  color: '#fb923c' },
+                { icon: <Shield size={10} />, label: 'DEF', val: hero.stats.defense, color: '#60a5fa' },
+                { icon: <Zap    size={10} />, label: 'MAG', val: hero.stats.magic,   color: '#c084fc' },
+              ].map(s => (
+                <div key={s.label} className="flex-1 flex flex-col items-center py-2"
+                  style={{ borderTop: `2px solid ${s.color}44`, background: 'rgba(0,0,0,0.3)' }}>
+                  <span style={{ color: s.color, marginBottom: 2 }}>{s.icon}</span>
+                  <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 5, color: 'var(--mute-text)' }}>{s.label}</span>
+                  <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: s.color }}>{s.val}</span>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-gray-500 text-xs uppercase">Attack</p>
-              <p className="text-xl font-bold text-orange-400">{hero.stats.attack}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 text-xs uppercase">Defense</p>
-              <p className="text-xl font-bold text-blue-400">{hero.stats.defense}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 text-xs uppercase">Magic</p>
-              <p className="text-xl font-bold text-purple-400">{hero.stats.magic}</p>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* Run Stats */}
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-700 text-sm"
-        >
-          <h3 className="text-gray-400 font-bold uppercase text-sm mb-3">Battle Statistics</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div><p className="text-gray-500">Monsters Defeated:</p><p className="text-lg font-bold text-green-400">{runStats.monstersDefeated}</p></div>
-            <div><p className="text-gray-500">Total Turns:</p><p className="text-lg font-bold text-cyan-400">{runStats.totalTurns}</p></div>
-            <div><p className="text-gray-500">Damage Dealt:</p><p className="text-lg font-bold text-red-400">{runStats.totalDamageDealt}</p></div>
-            <div><p className="text-gray-500">Total Healing:</p><p className="text-lg font-bold text-blue-400">{runStats.totalHealing}</p></div>
-          </div>
-        </motion.div>
+          {/* Battle stats */}
+          <motion.div {...stagger(2)} className="panel p-3">
+            <p className="rune-line mb-2" style={{ fontSize: 6 }}>battle record</p>
+            <StatRow label="Monsters Defeated" value={runStats.monstersDefeated} color="#4ade80" />
+            <StatRow label="Total Turns"       value={runStats.totalTurns}       color="#60a5fa" />
+            <StatRow label="Damage Dealt"      value={runStats.totalDamageDealt} color="#f87171" />
+            <StatRow label="Total Healed"      value={runStats.totalHealing}     color="#4ade80" />
+          </motion.div>
 
-        {/* Return Button */}
-        <motion.button
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          onClick={handleReturnToMenu}
-          className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95 uppercase tracking-wider"
-        >
-          Return to Main Menu
-        </motion.button>
+          {/* Return button */}
+          <motion.button
+            {...stagger(3)}
+            onClick={exitToMenu}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            className="w-full flex items-center justify-center gap-3 py-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(60,20,90,0.85), rgba(25,8,45,0.96))',
+              border: '1px solid var(--arcane-lt)',
+              color: 'var(--arcane-lt)',
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: 9,
+              letterSpacing: '0.2em',
+              boxShadow: '0 0 24px rgba(94,46,144,0.25)',
+              clipPath: 'polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px))',
+              cursor: 'pointer',
+            }}
+          >
+            Return to Menu <ChevronRight size={14} />
+          </motion.button>
+        </div>
       </motion.div>
     </div>
   )
