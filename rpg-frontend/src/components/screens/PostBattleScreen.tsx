@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
-import { Swords, Shield, Zap, Heart, ChevronRight } from 'lucide-react'
+import { Swords, Shield, Zap, ChevronRight } from 'lucide-react'
 
 export default function PostBattleScreen() {
   const {
@@ -20,7 +20,6 @@ export default function PostBattleScreen() {
     if (newlyLearnedMove) equipMove(newlyLearnedMove, slot)
   }
 
-  const accentColor = didWinBattle ? 'var(--verdant)' : 'var(--crimson)'
   const panelClass  = didWinBattle ? 'panel-gold'    : 'panel-crimson'
 
   return (
