@@ -3,18 +3,41 @@ package engine
 import (
     "math/rand"
     "rpg-backend/models"
+    "os"
+    "encoding/json"
 )
 
 func PickMonsterMove(monster models.Monster, state models.BattleState) models.Move {
-    // If RL is enabled and agent exists, delegate to the agent.
-    // The agent itself uses the heuristic path directly to avoid recursion.
-    if RL != nil && UseRL {
-        idx := RL.SelectMove(monster, state)
-        if idx >= 0 && idx < len(monster.Moves) {
-            return monster.Moves[idx]
-        }
-    }
-    return pickMonsterMoveHeuristic(monster, state)
+	mode := loadAIMode()
+
+	switch mode {
+	case "random":
+		return monster.Moves[rand.Intn(len(monster.Moves))]
+	case "rule_based":
+		return pickMonsterMoveHeuristic(monster, state)
+	default: // "ql"
+		if RL != nil && UseRL {
+			idx := RL.SelectMove(monster, state)
+			if idx >= 0 && idx < len(monster.Moves) {
+				return monster.Moves[idx]
+			}
+		}
+		return pickMonsterMoveHeuristic(monster, state)
+	}
+}
+
+func loadAIMode() string {
+	data, err := os.ReadFile("config/ai_config.json")
+	if err != nil {
+		return "ql"
+	}
+	var cfg struct {
+		AIMode string `json:"ai_mode"`
+	}
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return "ql"
+	}
+	return cfg.AIMode
 }
 
 func pickMonsterMoveHeuristic(monster models.Monster, state models.BattleState) models.Move {
@@ -143,3 +166,5 @@ func weightedRandom(moves []models.Move) models.Move {
 
     return moves[0] // fallback
 }
+
+

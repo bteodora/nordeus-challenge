@@ -7,7 +7,6 @@ import (
     "rpg-backend/engine"
 )
 
-// RecordExperience accepts minimal experience JSON and forwards to engine.
 func RecordExperience(c *gin.Context) {
     var ex engine.Experience
     if err := c.ShouldBindJSON(&ex); err != nil {
@@ -15,5 +14,10 @@ func RecordExperience(c *gin.Context) {
         return
     }
     engine.AddExperience(ex)
+    heroWon := ex.Outcome == "lose" // monster izgubio = hero pobedio
+    engine.Adaptive.RecordOutcome(ex.State.MonsterID, heroWon)
+    engine.Adaptive.RecordHeroMove(ex.State.MonsterID, ex.ActionID)
     c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
+
+

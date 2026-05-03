@@ -5,6 +5,7 @@ import (
     "os"
     "rpg-backend/models"
     "time"
+    "log"
 )
 
 var (
@@ -103,4 +104,31 @@ func FindMonster(id string, config *models.RunConfig) *models.Monster {
 func RegisterTemporaryMonster(m models.Monster) {
     tm := m
     tempMonsters[tm.ID] = &tm
+}
+
+func init() {
+    defer func() {
+        if r := recover(); r != nil {
+            log.Printf("[RL] Training failed, using heuristic: %v", r)
+            UseRL = false
+        }
+    }()
+    
+    cfg := LoadConfig()
+    if cfg == nil || len(cfg.Monsters) == 0 {
+        log.Println("[RL] No monsters, skipping training")
+        return
+    }
+    
+    // Proveri da li su moves populirani
+    for _, m := range cfg.Monsters {
+        if len(m.Moves) == 0 {
+            log.Printf("[RL] Monster %s has no moves — check loader", m.Name)
+            return
+        }
+    }
+    
+    log.Println("[RL] Training...")
+    RL = NewRLAgent(cfg.Monsters)
+    UseRL = true
 }
