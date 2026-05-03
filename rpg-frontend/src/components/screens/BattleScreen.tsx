@@ -261,65 +261,77 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      {/* ── MOVE PANEL (Fiksna visina) ── */}
-      <div className="relative z-10 w-full p-3 md:p-4">
-        <div className="panel panel-gold p-4 relative">
-          {/* ... Processing overlay ... */}
+// U BattleScreen.tsx
 
-          <div className="flex items-center justify-between mb-3">
-            <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: 'var(--dim-text)', letterSpacing: '0.2em' }}>
-              SELECT MOVE
-            </span>
-            <button
-              onClick={() => setShowLog(s => !s)}
-              className="pixel-button py-1.5 px-2.5 flex items-center gap-2"
-              style={{ fontSize: 9, color: showLog ? 'var(--gold)' : undefined }}
+{/* ── MOVE PANEL (Fiksna visina) ── */}
+<div className="relative z-10 w-full p-3 md:p-4">
+  {/* IZMENA 1: Povećan vertikalni padding (py-5) da bi ceo panel bio viši */}
+  <div className="panel panel-gold px-4 py-5 md:px-6 relative">
+    {/* ... Processing overlay ... */}
+
+    {/* Zaglavlje panela - ostaje isto */}
+    <div className="flex items-center justify-between mb-4">
+      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: 'var(--dim-text)', letterSpacing: '0.2em' }}>
+        SELECT MOVE
+      </span>
+      <button
+        onClick={() => setShowLog(s => !s)}
+        className="pixel-button py-2 px-3 flex items-center gap-2"
+        style={{ fontSize: 11, color: showLog ? 'var(--gold)' : undefined }}
+      >
+        <ScrollText size={13} />
+        {showLog ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+        LOG {battleLog.length > 0 && `(${battleLog.length})`}
+      </button>
+    </div>
+
+    {/* Dugmad - ostaju ista */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {equippedMoves.map((move, idx) => (
+        <MoveButton
+          key={idx}
+          move={move}
+          onClick={() => handleSelectMove(move)}
+          disabled={isProcessing}
+          // Ove klase čine dugmad višim i širim
+          className="w-full py-3"
+        />
+      ))}
+    </div>
+
+    {/* IZMENA 2: Potpuno novi, ispravan način za prikazivanje loga */}
+    <AnimatePresence>
+      {showLog && (
+        <motion.div
+          // Animiramo visinu od 0 do auto, što će glatko proširiti panel
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          style={{ overflow: 'hidden' }} // Sakriva sadržaj dok se kontejner širi
+        >
+          {/* Ovaj div služi da doda gornju marginu tek kad se animacija završi */}
+          <div className="mt-4">
+            <div className="rune-line mb-2" style={{ fontSize: 9 }}>battle log</div>
+            <div
+              ref={logRef}
+              // Ključna ispravka: Kontejner ima fiksnu MAKSIMALNU visinu i skroluje se ako je sadržaj duži
+              className="flex flex-col gap-1 overflow-y-auto"
+              style={{ maxHeight: 140 }} // Podesite visinu po želji
             >
-              <ScrollText size={11} />
-              {showLog ? <ChevronDown size={11} /> : <ChevronUp size={11} />}
-              LOG {battleLog.length > 0 && `(${battleLog.length})`}
-            </button>
+              {battleLog.length === 0
+                ? <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: 'var(--mute-text)', textAlign: 'center', padding: '12px 0' }}>No moves yet</p>
+                : battleLog.map((e, i) => <LogEntry key={i} entry={e} monsterName={monster.name} />)
+              }
+            </div>
           </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+</div>
 
-          {/* ISPRAVKA: Dugmad sada imaju w-full da popune grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {equippedMoves.map((move, idx) => (
-              <MoveButton
-                key={idx}
-                move={move}
-                onClick={() => handleSelectMove(move)}
-                disabled={isProcessing}
-                className="w-full"
-              />
-            ))}
-          </div>
-
-          {/* ISPRAVKA: Log se sada otvara unutar panela i neće pomerati arenu */}
-          <AnimatePresence>
-            {showLog && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.22 }}
-                style={{ overflow: 'hidden' }}
-              >
-                <div className="rune-line mt-4 mb-2" style={{ fontSize: 9 }}>battle log</div>
-                <div
-                  ref={logRef}
-                  className="flex flex-col gap-1 overflow-y-auto"
-                  style={{ maxHeight: 160 }}
-                >
-                  {battleLog.length === 0
-                    ? <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: 'var(--mute-text)', textAlign: 'center', padding: '12px 0' }}>No moves yet</p>
-                    : battleLog.map((e, i) => <LogEntry key={i} entry={e} monsterName={monster.name} />)
-                  }
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      
     </div>
   )
 }

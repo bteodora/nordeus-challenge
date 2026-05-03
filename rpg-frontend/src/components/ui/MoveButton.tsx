@@ -1,3 +1,5 @@
+// c:/Projekti/nordeus-challenge/rpg-frontend/src/components/ui/MoveButton.tsx
+
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
@@ -8,6 +10,7 @@ interface MoveButtonProps {
   move: Move
   onClick: () => void
   disabled: boolean
+  className?: string; // IZMENA 1: Dodat opcioni className prop
 }
 
 const effectIcons: Record<string, ReactNode> = {
@@ -22,14 +25,16 @@ const typeColor = {
   magical:  { bg: 'rgba(192,132,252,0.08)', border: 'rgba(192,132,252,0.25)', text: '#c084fc', glow: 'rgba(192,132,252,0.2)' },
 }
 
-export default function MoveButton({ move, onClick, disabled }: MoveButtonProps) {
+// IZMENA 2: Destrukturiramo className iz propova
+export default function MoveButton({ move, onClick, disabled, className }: MoveButtonProps) {
   const [showTooltip, setShowTooltip] = useState(false)
   const type = move.type === 'physical' ? typeColor.physical : typeColor.magical
   const icon = effectIcons[move.effect.split('_')[0]] || <Swords size={12} />
 
   return (
+    // IZMENA 3: Primenjujemo prosleđeni className na glavni div kontejner
     <div
-      className="relative"
+      className={`relative ${className || ''}`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
@@ -38,7 +43,8 @@ export default function MoveButton({ move, onClick, disabled }: MoveButtonProps)
         disabled={disabled}
         whileHover={disabled ? {} : { scale: 1.04, y: -2 }}
         whileTap={disabled ? {} : { scale: 0.96, y: 1 }}
-        className="w-full flex flex-col items-center justify-center gap-1.5 p-3 text-center transition-colors"
+        // IZMENA 4: Dodato "h-full" kako bi dugme popunilo visinu koju definiše spoljni kontejner
+        className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-3 text-center transition-colors"
         style={{
           background: disabled
             ? 'rgba(10,10,18,0.5)'
