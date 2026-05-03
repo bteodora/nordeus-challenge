@@ -78,7 +78,7 @@ export default function MainMenu() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-between relative overflow-hidden py-12">
+    <div className="w-full h-full flex flex-col items-center justify-around relative overflow-hidden py-12">
       {/* ── Embers ── */}
       {EMBERS.map((e) => (
         <Ember key={e.id} style={{ left: e.left, bottom: e.bottom }} />
@@ -102,7 +102,7 @@ export default function MainMenu() {
       <AnimatePresence>
         {titleVisible && (
           <motion.div
-            className="flex flex-col items-center mt-4"
+            className="flex flex-col items-center"
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -147,18 +147,9 @@ export default function MainMenu() {
         )}
       </AnimatePresence>
 
-      {/* ── Rune divider ── */}
-      <motion.div
-        className="rune-divider w-56"
-        initial={{ opacity: 0, scaleX: 0 }}
-        animate={{ opacity: 1, scaleX: 1 }}
-        transition={{ delay: 0.5, duration: 0.6 }}
-      >
-        ⚔
-      </motion.div>
 
       {/* ── Buttons ── */}
-      <div className="flex flex-col gap-4 w-60 items-center mb-4">
+      <div className="flex flex-col gap-4 w-60 items-center">
         <RuneButton onClick={startNewRun} delay={0.3} icon={<Play size={14} />}>
           New Adventure
         </RuneButton>
