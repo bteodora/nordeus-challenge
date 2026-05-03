@@ -41,6 +41,12 @@ func GetMonsterMove(c *gin.Context) {
 		return
 	}
 
+	if len(monster.Moves) == 0 {
+        c.JSON(500, gin.H{"error": "monster has no moves: " + state.MonsterID})
+        return
+    }
+
+
 	// AI bira potez
 	move := engine.PickMonsterMove(*monster, state)
 	// Resolvi potez u rezultat

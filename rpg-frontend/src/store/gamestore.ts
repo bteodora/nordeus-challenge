@@ -379,6 +379,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     addDamageNumber(heroDamage, 'damage', 'monster')
     if (heroHealing > 0) addDamageNumber(heroHealing, 'heal', 'hero')
 
+    if (get().endlessMode) {
+      postExperience({
+        state: state,
+        action_id: move.id, 
+        reward: heroDamage > 0 ? heroDamage : (heroHealing > 0 ? heroHealing * 0.5 : 0),
+        outcome: 'ongoing'
+      }).catch(() => {})
+    }
+
     if (state.monster_hp <= 0) {
       stats.totalTurns += 1
       if (!monster) return
@@ -431,6 +440,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (state.hero_hp <= 0) {
       const endlessMode = get().endlessMode
+      if (endlessMode) {
+        postExperience({
+          state: state,
+          action_id: move.id,
+          reward: -15,
+          outcome: 'win'  // monster pobedio
+        }).catch(() => {})
+      }
       set({
         battleState: state,
         battleLog: [...get().battleLog, ...newLog],
