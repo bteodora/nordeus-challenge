@@ -23,14 +23,15 @@ const DIFF_LABELS = ['', 'Weak', 'Common', 'Dangerous', 'Deadly', 'Legendary']
 // ─── Inline canvas sprite for map nodes ──────────────────────────────────────
 function MapSprite({
   monsterName,
-  scale = 3, // IZMENA: Povećan podrazumevani scale sa 2 na 3 za veći prikaz
+  scale = 4,
   defeated = false,
 }: {
   monsterName?: string
   scale?: number
   defeated?: boolean
 }) {
-  const ref = useRef(null)
+  // ISPRAVKA: Definisali smo tip za useRef da bi TypeScript znao da radi sa canvas elementom.
+  const ref = useRef<HTMLCanvasElement>(null)
   const sprite = monsterName ? getSpriteForName(monsterName) : KNIGHT
 
   useEffect(() => {
@@ -70,7 +71,7 @@ function MapSprite({
         opacity: defeated ? 0.4 : 1,
         filter: defeated
           ? 'grayscale(1)'
-          : `drop-shadow(0 0 6px ${sprite.color}90)`, // IZMENA: Malo pojačan shadow
+          : `drop-shadow(0 0 8px ${sprite.color}90)`,
       }}
     />
   )
@@ -97,7 +98,7 @@ export default function MapScreen() {
         className="flex items-center justify-center h-full"
         style={{
           fontFamily: "'Press Start 2P', monospace",
-          fontSize: 12, // IZMENA: Povećan font
+          fontSize: 14,
           color: 'var(--mute-text)',
         }}
       >
@@ -119,40 +120,36 @@ export default function MapScreen() {
         }}
       >
         {/* ═══ SIDEBAR ═══ */}
-        {/* IZMENA: Povećana širina sidebar-a (w-72) i razmaci (gap-4, p-5) */}
         <div
-          className="w-72 flex-shrink-0 flex flex-col gap-4 p-5 overflow-y-auto"
+          className="w-96 flex-shrink-0 flex flex-col gap-8 px-8 pt-12 pb-8 overflow-y-auto"
           style={{
-            borderRight: '1px solid var(--rim)',
+            borderRight: '2px solid var(--rim)',
             background: 'rgba(2,1,9,0.65)',
           }}
         >
           {/* Hero card */}
-          <div className="panel panel-gold p-4">
+          <div className="panel panel-gold p-5">
             {/* Hero sprite + name row */}
-            <div className="flex items-center gap-4 mb-4">
-              {/* IZMENA: Povećan scale sprajta */}
-              <MapSprite scale={3} />
+            <div className="flex items-center gap-4 mb-5">
+              <MapSprite scale={4} />
               <div className="flex-1 min-w-0">
-                {/* IZMENA: Povećani fontovi */}
-                <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: 'var(--gold)', marginBottom: 4 }}>Knight</p>
-                <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: 'var(--mute-text)' }}>Level {hero.level}</p>
+                <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 16, color: 'var(--gold)', marginBottom: 6 }}>Knight</p>
+                <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10, color: 'var(--mute-text)' }}>Level {hero.level}</p>
               </div>
-              <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: 'var(--gold)' }}>💰{coins}</p>
+              <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: 'var(--gold)' }}>💰{coins}</p>
             </div>
 
             {/* HP bar */}
-            <div className="mb-4">
-              <div className="flex justify-between mb-1.5">
-                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: 'var(--mute-text)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  {/* IZMENA: Povećana ikonica */}
-                  <Heart size={10} /> HP
+            <div className="mb-6">
+              <div className="flex justify-between mb-2">
+                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10, color: 'var(--mute-text)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Heart size={12} /> HP
                 </span>
-                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: hpColor }}>
+                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10, color: hpColor }}>
                   {hero.currentHp}/{hero.maxHp}
                 </span>
               </div>
-              <div className="hp-track">
+              <div className="hp-track" style={{ height: 8 }}>
                 <motion.div
                   className={`hp-fill ${hpCls}`}
                   animate={{ width: `${hpPct * 100}%` }}
@@ -161,46 +158,44 @@ export default function MapScreen() {
               </div>
             </div>
 
-            {/* Stats 2×2 */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Stats */}
+            <div className="flex flex-col gap-3">
               {[
-                // IZMENA: Povećane ikonice i font
-                { icon: <Swords size={9} />, label: 'ATK', val: hero.stats?.attack, color: '#fb923c' },
-                { icon: <Shield size={9} />, label: 'DEF', val: hero.stats?.defense, color: '#60a5fa' },
-                { icon: <Zap size={9} />, label: 'MAG', val: hero.stats?.magic, color: '#c084fc' },
-                { icon: <Heart size={9} />, label: 'HP', val: hero.stats?.health, color: '#f87171' },
+                { icon: <Swords size={11} />, label: 'ATK', val: hero.stats?.attack, color: '#fb923c' },
+                { icon: <Shield size={11} />, label: 'DEF', val: hero.stats?.defense, color: '#60a5fa' },
+                { icon: <Zap size={11} />, label: 'MAG', val: hero.stats?.magic, color: '#c084fc' },
+                { icon: <Heart size={11} />, label: 'HP', val: hero.stats?.health, color: '#f87171' },
               ].map(s => (
                 <div
                   key={s.label}
-                  className="flex items-center gap-2"
-                  style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: 'var(--dim-text)' }}
+                  className="flex items-center gap-2.5"
+                  style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: 'var(--dim-text)' }}
                 >
                   <span style={{ color: s.color }}>{s.icon}</span>
-                  {s.label} <span style={{ color: s.color }}>{s.val}</span>
+                  {s.label}
+                  <span style={{ color: s.color, marginLeft: 'auto' }}>{s.val}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Equipped moves */}
-          <div className="panel p-4">
-            {/* IZMENA: Povećan font i margina */}
-            <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: 'var(--mute-text)', letterSpacing: '0.2em', marginBottom: 10 }}>
+          <div className="panel p-5">
+            <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10, color: 'var(--mute-text)', letterSpacing: '0.2em', marginBottom: 12 }}>
               EQUIPPED
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {equippedMoves.map((move, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between px-3 py-2" // IZMENA: Povećan padding
+                  className="flex items-center justify-between px-4 py-3"
                   style={{
                     background: 'rgba(0,0,0,0.3)',
-                    borderLeft: `3px solid ${move.type === 'physical' ? '#fb923c44' : '#c084fc44'}`, // IZMENA: Malo deblji border
+                    borderLeft: `4px solid ${move.type === 'physical' ? '#fb923c55' : '#c084fc55'}`,
                   }}
                 >
-                  {/* IZMENA: Povećani fontovi */}
-                  <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: 'var(--ink-text)' }}>{move.name}</span>
-                  <span style={{ fontSize: 12, color: move.type === 'physical' ? '#fb923c' : '#c084fc' }}>
+                  <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: 'var(--ink-text)' }}>{move.name}</span>
+                  <span style={{ fontSize: 16, color: move.type === 'physical' ? '#fb923c' : '#c084fc' }}>
                     {move.type === 'physical' ? '⚔' : '✦'}
                   </span>
                 </div>
@@ -208,52 +203,49 @@ export default function MapScreen() {
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-col gap-3 mt-auto">
-            {/* IZMENA: Povećani font, ikonice i gap */}
-            <button onClick={() => setIsManageMovesOpen(true)} className="pixel-button w-full justify-center gap-3" style={{ fontSize: 10 }}>
-              <Scroll size={12} /> Manage Moves
+          {/* Action buttons na dnu sidebara */}
+          <div className="flex flex-col gap-4 mt-auto">
+            <button onClick={() => setIsManageMovesOpen(true)} className="pixel-button w-full justify-center gap-3 py-3" style={{ fontSize: 12 }}>
+              <Scroll size={16} /> Manage Moves
             </button>
-            <button onClick={() => setIsShopOpen(true)} className="pixel-button w-full justify-center gap-3" style={{ fontSize: 10 }}>
-              <ShoppingBag size={12} /> Shop
+            <button onClick={() => setIsShopOpen(true)} className="pixel-button w-full justify-center gap-3 py-3" style={{ fontSize: 12 }}>
+              <ShoppingBag size={16} /> Shop
             </button>
             <button
               onClick={() => {
                 useGameStore.getState().saveRun()
                 useGameStore.getState().exitToMenu()
               }}
-              className="pixel-button w-full justify-center gap-3"
-              style={{ fontSize: 9, color: 'var(--mute-text)', borderColor: 'var(--rim)' }}
+              className="pixel-button w-full justify-center gap-3 py-2.5"
+              style={{ fontSize: 11, color: 'var(--mute-text)', borderColor: 'var(--rim)' }}
             >
-              <LogOut size={12} /> Save & Exit
+              <LogOut size={14} /> Save & Exit
             </button>
           </div>
         </div>
 
         {/* ═══ MAIN MAP ═══ */}
-        <div className="flex-1 flex flex-col items-center overflow-y-auto py-12 px-8 relative">
+        <div className="flex-1 flex flex-col items-center overflow-y-auto py-16 px-12 relative">
           
-          <div className="pointer-events-none absolute top-0 inset-x-0 h-48"
-            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(207,168,72,0.04), transparent)' }} />
+          <div className="pointer-events-none absolute top-0 inset-x-0 h-64"
+            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(207,168,72,0.05), transparent)' }} />
 
           {/* Title */}
-          {/* IZMENA: Povećani fontovi i margine */}
-          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-4">
-            <h2 style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 20, color: 'var(--gold)',
-              textShadow: '0 0 20px rgba(207,168,72,0.35)', letterSpacing: '0.2em' }}>
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
+            <h2 style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 28, color: 'var(--gold)',
+              textShadow: '0 0 25px rgba(207,168,72,0.4)', letterSpacing: '0.2em' }}>
               THE GAUNTLET
             </h2>
           </motion.div>
-          <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: 'var(--mute-text)', marginBottom: 48, letterSpacing: '0.2em' }}>
+          <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: 'var(--mute-text)', marginBottom: 64, letterSpacing: '0.2em' }}>
             {currentEncounterIndex} / {config.monsters.length} defeated
           </p>
 
           {/* Path + nodes */}
-          {/* IZMENA: Povećana širina (max-w-xl) i razmak (gap-4) */}
-          <div className="relative w-full max-w-xl flex flex-col items-center gap-4">
-            <div className="absolute top-8 bottom-8 pointer-events-none"
-              style={{ left: '50%', width: 2, transform: 'translateX(-50%)', // IZMENA: Deblja linija
-                background: 'linear-gradient(180deg, var(--gold-dk) 0%, var(--moss) 50%, var(--rim) 100%)', opacity: 0.3 }} />
+          <div className="relative w-full max-w-4xl flex flex-col items-center gap-6">
+            <div className="absolute top-10 bottom-10 pointer-events-none"
+              style={{ left: '50%', width: 2, transform: 'translateX(-50%)',
+                background: 'linear-gradient(180deg, var(--gold-dk) 0%, var(--moss) 50%, var(--rim) 100%)', opacity: 0.35 }} />
 
             {config.monsters.map((monster, index) => {
               const isCurrent = index === currentEncounterIndex
@@ -264,34 +256,32 @@ export default function MapScreen() {
               return (
                 <motion.div
                   key={monster.id}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -32 : 32 }} // IZMENA: Povećana animacija
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -40 : 40 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.055, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => isCurrent && enterBattle(index)}
-                  className={`map-node w-full flex items-center justify-between p-4 ${ // IZMENA: Povećan padding
+                  className={`map-node w-full flex items-center justify-between p-6 ${
                     isCurrent ? 'map-node-active' : isPast ? 'map-node-done' : 'map-node-locked'
                   }`}
-                  style={{ boxShadow: isCurrent ? `0 0 24px ${sprite.glow}` : undefined }} // IZMENA: Povećan shadow
+                  style={{ boxShadow: isCurrent ? `0 0 30px ${sprite.glow}` : undefined }}
                 >
                   {/* Left: sprite + info */}
-                  <div className="flex items-center gap-4">
-                    {/* IZMENA: Povećan kontejner za sprajt */}
-                    <div style={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <MapSprite monsterName={monster.name} scale={3} defeated={isPast} />
+                  <div className="flex items-center gap-6">
+                    <div style={{ width: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <MapSprite monsterName={monster.name} scale={4} defeated={isPast} />
                     </div>
                     <div>
-                      {/* IZMENA: Povećani fontovi */}
-                      <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11,
+                      <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 16,
                         color: isCurrent ? 'var(--gold)' : isPast ? 'var(--mute-text)' : 'var(--dim-text)',
-                        marginBottom: 6 }}>
+                        marginBottom: 8 }}>
                         {monster.name}
                       </p>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         {Array.from({ length: monster.difficulty }).map((_, i) => (
-                          <span key={i} style={{ fontSize: 9, color: DIFF_COLORS[monster.difficulty] }}>⚔</span>
+                          <span key={i} style={{ fontSize: 12, color: DIFF_COLORS[monster.difficulty] }}>⚔</span>
                         ))}
-                        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8,
-                          color: DIFF_COLORS[monster.difficulty], marginLeft: 4 }}>
+                        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10,
+                          color: DIFF_COLORS[monster.difficulty], marginLeft: 6 }}>
                           {DIFF_LABELS[monster.difficulty]}
                         </span>
                       </div>
@@ -299,40 +289,37 @@ export default function MapScreen() {
                   </div>
 
                   {/* Right: actions */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="flex items-center gap-4 flex-shrink-0">
                     <button
                       onClick={e => { e.stopPropagation(); setSelectedMonster(monster) }}
-                      className="pixel-button p-2" title="Preview" // IZMENA: Povećan padding
+                      className="pixel-button p-2.5" title="Preview"
                     >
-                      <Eye size={14} /> {/* IZMENA: Povećana ikonica */}
+                      <Eye size={18} />
                     </button>
 
                     {isCurrent && (
                       <button
                         onClick={e => { e.stopPropagation(); enterBattle(index) }}
-                        // IZMENA: Povećan padding, font i ikonica
-                        className="pixel-button py-2 px-4 flex items-center gap-2"
-                        style={{ color: '#f87171', borderColor: 'var(--blood)', background: 'rgba(138,24,24,0.25)', fontSize: 10 }}
+                        className="pixel-button py-2.5 px-6 flex items-center gap-3"
+                        style={{ color: '#f87171', borderColor: 'var(--blood)', background: 'rgba(138,24,24,0.25)', fontSize: 14 }}
                       >
-                        <Swords size={12} /> FIGHT
+                        <Swords size={16} /> FIGHT
                       </button>
                     )}
 
                     {isPast && (
-                      <div className="flex items-center gap-3">
-                        {/* IZMENA: Povećani fontovi */}
-                        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10, color: 'var(--moss-lt)' }}>✓</span>
+                      <div className="flex items-center gap-4">
+                        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: 'var(--moss-lt)' }}>✓</span>
                         <button
                           onClick={e => { e.stopPropagation(); enterBattle(index, true) }}
-                          className="pixel-button py-1.5 px-3"
-                          style={{ fontSize: 9 }}
+                          className="pixel-button py-2 px-4"
+                          style={{ fontSize: 11 }}
                         >Replay</button>
                       </div>
                     )}
 
                     {isLocked && (
-                      // IZMENA: Povećan font
-                      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 12, color: 'var(--mute-text)' }}>🔒</span>
+                      <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 18, color: 'var(--mute-text)' }}>🔒</span>
                     )}
                   </div>
                 </motion.div>

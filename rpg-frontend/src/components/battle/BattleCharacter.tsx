@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { SpriteData } from '../sprites/sprites'
 import { KNIGHT, getSpriteForName } from '../sprites/sprites'
@@ -11,7 +11,8 @@ interface PixelSpriteCanvasProps {
   flip?: boolean
 }
 
-function PixelSpriteCanvas({ sprite, frame, scale = 5, flip = false }: PixelSpriteCanvasProps) {
+// IZMENA: Podrazumevani scale je sada 9, za mnogo veće sprajtove
+function PixelSpriteCanvas({ sprite, frame, scale = 9, flip = false }: PixelSpriteCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -76,15 +77,15 @@ function DamageNumbers({ numbers }: { numbers: DmgNum[] }) {
           <motion.div
             key={n.id}
             initial={{ opacity: 1, y: 0, scale: 1 }}
-            animate={{ opacity: 0, y: -40, scale: 1.3 }}
+            animate={{ opacity: 0, y: -60, scale: 1.4 }} // IZMENA: Jača animacija
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
             className="absolute left-1/2 top-0 -translate-x-1/2 font-bold pointer-events-none"
             style={{
               fontFamily: "'Press Start 2P', monospace",
-              fontSize: 11,
+              fontSize: 18, // IZMENA: Značajno veći font
               color: n.type === 'heal' ? '#4ade80' : '#f87171',
-              textShadow: `0 0 8px ${n.type === 'heal' ? '#4ade80' : '#f87171'}, 0 2px 0 #000`,
+              textShadow: `0 0 10px ${n.type === 'heal' ? '#4ade80' : '#f87171'}, 0 3px 0 #000`, // IZMENA: Jači shadow
               zIndex: 99,
             }}
           >
@@ -101,22 +102,22 @@ function SlashVFX({ active, color }: { active: boolean; color: string }) {
   if (!active) return null
   return (
     <motion.div
-      initial={{ opacity: 0, scaleX: 0.3, x: -10 }}
+      initial={{ opacity: 0, scaleX: 0.3, x: -15 }}
       animate={{ opacity: [0, 1, 0.8, 0], scaleX: [0.3, 1.1, 1, 0] }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
       className="absolute inset-0 pointer-events-none flex items-center justify-center"
     >
-      {/* Slash lines */}
+      {/* IZMENA: Povećani Slash efekti */}
       {[0, 1, 2].map(i => (
         <div
           key={i}
           className="absolute"
           style={{
-            width: 3,
-            height: 28 + i * 8,
+            width: 5,
+            height: 50 + i * 12,
             background: `linear-gradient(180deg, transparent, ${color}, transparent)`,
-            transform: `rotate(${-30 + i * 15}deg) translateX(${(i - 1) * 8}px)`,
-            boxShadow: `0 0 6px ${color}`,
+            transform: `rotate(${-30 + i * 15}deg) translateX(${(i - 1) * 12}px)`,
+            boxShadow: `0 0 8px ${color}`,
             opacity: 0.9,
           }}
         />
@@ -135,11 +136,12 @@ function MagicVFX({ active, color }: { active: boolean; color: string }) {
       transition={{ duration: 0.45, ease: 'easeOut' }}
       className="absolute inset-0 pointer-events-none flex items-center justify-center"
     >
+      {/* IZMENA: Povećan Magic efekat */}
       <div style={{
-        width: 36, height: 36,
+        width: 64, height: 64,
         borderRadius: '50%',
         background: `radial-gradient(circle, ${color}ff 0%, ${color}40 60%, transparent 100%)`,
-        boxShadow: `0 0 20px ${color}, 0 0 40px ${color}60`,
+        boxShadow: `0 0 25px ${color}, 0 0 50px ${color}60`,
       }} />
     </motion.div>
   )
@@ -147,7 +149,7 @@ function MagicVFX({ active, color }: { active: boolean; color: string }) {
 
 // ─── MAIN BATTLE CHARACTER ────────────────────────────────────────────────────
 interface BattleCharacterProps {
-  monsterName?: string   // used to pick sprite; omit for hero
+  monsterName?: string
   isHero?: boolean
   isHit?: boolean
   isAttacking?: boolean
@@ -164,7 +166,7 @@ export default function BattleCharacter({
   isAttacking = false,
   isRaging = false,
   damageNumbers = [],
-  scale = 5,
+  scale = 9, // IZMENA: Podrazumevani scale je 9
   showVFX = null,
 }: BattleCharacterProps) {
   const sprite = isHero ? KNIGHT : getSpriteForName(monsterName ?? '')
@@ -172,7 +174,6 @@ export default function BattleCharacter({
   const frame: 'idle' | 'attack' | 'hurt' =
     isHit ? 'hurt' : isAttacking ? 'attack' : 'idle'
 
-  // Idle bob animation timing
   const [bob, setBob] = useState(false)
   useEffect(() => {
     if (isHit || isAttacking) return
@@ -182,34 +183,33 @@ export default function BattleCharacter({
     return () => clearInterval(t)
   }, [isHit, isAttacking])
 
-  const translateX = isAttacking ? (isHero ? 6 : -6) : 0
-  const translateY = isHit ? 3 : bob ? -3 : 0
+  // IZMENA: Jače animacije pomeranja
+  const translateX = isAttacking ? (isHero ? 12 : -12) : 0
+  const translateY = isHit ? 6 : bob ? -5 : 0
   const rageFilter = isRaging
-    ? `drop-shadow(0 0 8px #ff2200) drop-shadow(0 0 16px #ff440060)`
-    : `drop-shadow(0 0 6px ${sprite.color}80)`
+    ? `drop-shadow(0 0 12px #ff2200) drop-shadow(0 0 24px #ff440060)`
+    : `drop-shadow(0 0 10px ${sprite.color}80)`
 
   return (
     <div className="relative flex flex-col items-center">
-      {/* Character container */}
       <div
         className="relative"
         style={{
           transform: `translateX(${translateX}px) translateY(${translateY}px)`,
-          transition: isHit || isAttacking ? 'transform 0.08s ease' : 'transform 0.3s ease',
+          transition: isHit || isAttacking ? 'transform 0.08s ease' : 'transform 0.4s ease-in-out',
         }}
       >
-        {/* Glow platform shadow */}
+        {/* IZMENA: Povećana senka ispod karaktera */}
         <div
           className="absolute bottom-0 left-1/2 -translate-x-1/2"
           style={{
-            width: 48, height: 6,
+            width: 80, height: 10,
             background: `radial-gradient(ellipse, ${sprite.color}60 0%, transparent 70%)`,
-            filter: 'blur(4px)',
-            bottom: -4,
+            filter: 'blur(6px)',
+            bottom: -8,
           }}
         />
 
-        {/* Sprite + overlays */}
         <div className="relative" style={{ filter: rageFilter }}>
           <PixelSpriteCanvas
             sprite={sprite}
@@ -217,15 +217,9 @@ export default function BattleCharacter({
             scale={scale}
             flip={!isHero}
           />
-
-          {/* Hit flash */}
           {isHit && <HitFlash active={isHit} color={isHero ? '#4488ff' : '#ff4444'} />}
-
-          {/* Attack VFX */}
           <SlashVFX active={showVFX === 'slash'} color={sprite.color} />
           <MagicVFX active={showVFX === 'magic'} color={sprite.color} />
-
-          {/* Damage numbers */}
           <DamageNumbers numbers={damageNumbers} />
         </div>
       </div>
