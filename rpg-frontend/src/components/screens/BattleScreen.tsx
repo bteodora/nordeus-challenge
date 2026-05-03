@@ -1,45 +1,49 @@
 import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
 import type { Move } from '../../api/client'
 import { MonsterTell } from '../ui/MonsterTell'
 import BattleCharacter from '../battle/BattleCharacter'
 import MoveButton from '../ui/MoveButton'
 import BattleForestBackdrop from '../ui/BattleForestBackdrop'
+import { ScrollText } from 'lucide-react'
 
 export default function BattleScreen() {
   const {
     config, currentEncounterIndex, battleState, battleLog, monsterTell,
-    selectMove, equippedMoves, damageNumbers, isRaging, endlessMode, endlessUpcoming, currentMonster
+    selectMove, equippedMoves, damageNumbers, isRaging, endlessMode,
+    endlessUpcoming, currentMonster,
   } = useGameStore()
 
   const [isProcessing, setIsProcessing] = useState(false)
-  const [heroIsHit, setHeroIsHit] = useState(false)
+  const [heroIsHit, setHeroIsHit]       = useState(false)
   const [monsterIsHit, setMonsterIsHit] = useState(false)
-  const [showLog, setShowLog] = useState(true)
-  const logContainerRef = useRef<HTMLDivElement>(null)
+  const [showLog, setShowLog]           = useState(false)
+  const logRef = useRef<HTMLDivElement>(null)
 
-  // Efekat za "shake" animaciju kad neko primi udarac
   useEffect(() => {
-    const lastLog = battleLog[battleLog.length - 1]
-    if (!lastLog || !lastLog.damage) return
-
-    if (lastLog.actor === 'hero') { // Hero je napao -> Monster je udaren
-      setMonsterIsHit(true)
-      setTimeout(() => setMonsterIsHit(false), 300)
-    } else { // Monster je napao -> Hero je udaren
-      setHeroIsHit(true)
-      setTimeout(() => setHeroIsHit(false), 300)
+    const last = battleLog[battleLog.length - 1]
+    if (!last?.damage) return
+    if (last.actor === 'hero') {
+      setMonsterIsHit(true); setTimeout(() => setMonsterIsHit(false), 320)
+    } else {
+      setHeroIsHit(true); setTimeout(() => setHeroIsHit(false), 320)
     }
   }, [battleLog])
 
   useEffect(() => {
-    if (!logContainerRef.current) return
-    logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
   }, [battleLog])
 
-  if (!config || !battleState) return <div className="flex items-center justify-center h-full">Loading Battle...</div>
-  const monster = endlessMode && currentMonster ? currentMonster : config.monsters[currentEncounterIndex]
+  if (!config || !battleState) return (
+    <div className="flex items-center justify-center h-full text-[10px] tracking-widest" style={{ color: 'var(--text-muted)' }}>
+      ⏳ Loading Battle...
+    </div>
+  )
 
+  const monster = endlessMode && currentMonster
+    ? currentMonster
+    : config.monsters[currentEncounterIndex]
 
   const handleSelectMove = async (move: Move) => {
     if (isProcessing) return
@@ -48,152 +52,195 @@ export default function BattleScreen() {
     setIsProcessing(false)
   }
 
-  // Filtriraj damage brojeve za svakog lika
-  const heroDamageNumbers = damageNumbers.filter(d => d.target === 'hero')
-  const monsterDamageNumbers = damageNumbers.filter(d => d.target === 'monster')
+  const heroDmg    = damageNumbers.filter(d => d.target === 'hero')
+  const monsterDmg = damageNumbers.filter(d => d.target === 'monster')
 
-  const renderLogDetails = (damage?: number, healing?: number, buffDesc?: string) => {
-    const parts: string[] = []
-    if (damage && damage > 0) parts.push(`-${damage} HP`)
-    if (healing && healing > 0) parts.push(`+${healing} HP`)
-    if (buffDesc) parts.push(buffDesc)
-    if (parts.length === 0) return 'No direct effect'
-    return parts.join(' • ')
-  }
+  const heroHpPct    = battleState.hero_hp    / battleState.hero_max_hp
+  const monsterHpPct = battleState.monster_hp / battleState.monster_max_hp
+
+  const hpClass = (pct: number) =>
+    pct > 0.5 ? 'hp-high' : pct > 0.25 ? 'hp-mid' : 'hp-low'
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-gray-900 to-black p-4 md:p-8 flex flex-col justify-between relative overflow-hidden">
+    <div className="w-full h-full flex flex-col relative overflow-hidden">
+      {/* ── Background ── */}
       <BattleForestBackdrop />
-      <div className="pointer-events-none absolute inset-0 opacity-25 bg-[radial-gradient(circle_at_50%_15%,rgba(180,160,90,0.14),transparent_22%),radial-gradient(circle_at_10%_80%,rgba(34,76,44,0.18),transparent_18%),radial-gradient(circle_at_90%_78%,rgba(34,76,44,0.18),transparent_18%)]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(4,6,5,0.9))]" />
 
-      {/* Distant moonlight beam */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-3/4 bg-[linear-gradient(115deg,rgba(255,255,255,0.0)_0%,rgba(188,180,255,0.06)_38%,rgba(255,255,255,0.0)_60%)] animate-pulse" />
-      
-      {/* Gornji deo: Turn Counter i MonsterTell */}
-      <div className="relative z-10 h-1/6 flex justify-between items-start px-4">
-        <div className="text-center p-2">
-          <p className="text-xs text-amber-200 uppercase tracking-wider">Battle Turn</p>
-          <p className="text-3xl font-black text-amber-300 drop-shadow-[0_0_10px_rgba(255,220,150,0.25)]">{battleState.turn}</p>
+      {/* Atmospheric tinting */}
+      <div className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 60% 30% at 50% 0%,   rgba(180,150,80,0.08),  transparent),
+            radial-gradient(ellipse 40% 30% at 10% 80%,  rgba(30,70,40,0.14),    transparent),
+            radial-gradient(ellipse 40% 30% at 90% 80%,  rgba(30,70,40,0.14),    transparent),
+            linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(2,2,8,0.92) 100%)
+          `,
+        }}
+      />
+
+      {/* Moonlight beam */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0"
+        style={{
+          height: '60%',
+          background: 'linear-gradient(160deg, transparent 0%, rgba(180,180,255,0.04) 42%, transparent 58%)',
+          animation: 'mist-pulse 8s ease-in-out infinite alternate',
+        }}
+      />
+
+      {/* ── TOP BAR ── */}
+      <div className="relative z-10 flex items-start justify-between px-5 pt-4 pb-2 gap-3 flex-shrink-0">
+
+        {/* Turn counter */}
+        <div className="pixel-panel panel-gold px-4 py-2 text-center flex-shrink-0" style={{ minWidth: 80 }}>
+          <p className="text-[7px] tracking-[0.2em] mb-1" style={{ color: 'var(--text-secondary)' }}>TURN</p>
+          <p className="text-2xl" style={{ color: 'var(--gold)' }}>{battleState.turn}</p>
         </div>
+
+        {/* Monster tell or waiting */}
         <div className="flex-1 flex justify-center">
-          {monsterTell ? (
-            <MonsterTell monsterName={monster.name} move={monsterTell} />
-          ) : (
-            <div className="text-center p-3 text-gray-300 text-sm tracking-[0.18em]">Awaiting action...</div>
-          )}
+          <AnimatePresence mode="wait">
+            {monsterTell ? (
+              <motion.div
+                key="tell"
+                initial={{ opacity: 0, y: -12, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                className="monster-tell px-5 py-3 text-center max-w-xs w-full"
+                style={{ clipPath: 'polygon(0 5px, 5px 5px, 5px 0, calc(100% - 5px) 0, calc(100% - 5px) 5px, 100% 5px, 100% calc(100% - 5px), calc(100% - 5px) calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 5px calc(100% - 5px), 0 calc(100% - 5px))' }}
+              >
+                <MonsterTell monsterName={monster.name} move={monsterTell} />
+              </motion.div>
+            ) : (
+              <motion.p
+                key="wait"
+                className="text-[8px] tracking-[0.25em] py-5"
+                style={{ color: 'var(--text-muted)' }}
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ repeat: Infinity, duration: 2.5 }}
+              >
+                Awaiting action...
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="text-right p-2">
-          <p className="text-xs text-amber-200 uppercase tracking-wider">HP Status</p>
-          <p className="text-lg font-bold text-red-300">{battleState.monster_hp}/{battleState.monster_max_hp}</p>
+
+        {/* Monster HP mini */}
+        <div className="pixel-panel panel-crimson px-4 py-2 text-right flex-shrink-0" style={{ minWidth: 90 }}>
+          <p className="text-[7px] tracking-[0.2em] mb-1" style={{ color: 'var(--text-secondary)' }}>FOE HP</p>
+          <p className="text-sm font-bold" style={{ color: '#f87171' }}>
+            {battleState.monster_hp}
+            <span className="text-[7px]" style={{ color: 'var(--text-muted)' }}>/{battleState.monster_max_hp}</span>
+          </p>
         </div>
       </div>
 
-      {/* Srednji deo: Arena + Battle Log */}
-      <div className="relative z-10 h-3/6 flex flex-col md:flex-row gap-4 px-2 md:px-4 items-stretch">
-        {endlessMode && endlessUpcoming && endlessUpcoming.length > 0 && (
-          <div className="w-full mb-2 flex gap-2 overflow-x-auto px-2">
-            {endlessUpcoming.map((u: any, idx: number) => (
-              <div key={idx} className="min-w-[120px] bg-[#0e120f]/80 border border-[#31412f] rounded p-2 text-xs backdrop-blur-sm">
-                {u.type === 'monster' ? (
-                  <div>
-                    <div className="font-bold text-amber-100">{u.monster.name}</div>
-                    <div className="text-green-200/70 text-xs uppercase tracking-wider">Diff: {u.monster.difficulty}</div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="font-bold text-green-200">Event: {u.event}</div>
-                    <div className="text-gray-300 text-xs">{u.desc || ''}</div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex-1 flex justify-between items-end">
-          <BattleCharacter 
+      {/* ── ARENA ── */}
+      <div className="relative z-10 flex-1 flex items-end justify-between px-6 pb-3 min-h-0">
+
+        {/* HERO side */}
+        <div className={`flex flex-col items-center gap-2 ${heroIsHit ? 'is-hit' : ''}`}>
+          <BattleCharacter
             name="Knight"
-            spriteEmoji="🧙" // Zameni sa sprajtom
+            spriteEmoji="🧙"
             hp={battleState.hero_hp}
             maxHp={battleState.hero_max_hp}
             isHero
             isHit={heroIsHit}
-            damageNumbers={heroDamageNumbers}
+            damageNumbers={heroDmg}
           />
-          <BattleCharacter 
+          {/* Hero HP bar */}
+          <div className="w-40">
+            <div className="flex justify-between text-[7px] mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <span>HP</span>
+              <span>{battleState.hero_hp}/{battleState.hero_max_hp}</span>
+            </div>
+            <div className="hp-bar-track w-full" style={{ clipPath: 'polygon(0 2px, 2px 0, calc(100% - 2px) 0, 100% 2px, 100% 100%, 0 100%)' }}>
+              <motion.div
+                className={`hp-bar-fill ${hpClass(heroHpPct)}`}
+                animate={{ width: `${heroHpPct * 100}%` }}
+                transition={{ duration: 0.5, type: 'spring' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Center VS text */}
+        <div className="flex flex-col items-center gap-1 opacity-25">
+          <span className="text-[9px] tracking-[0.4em]" style={{ color: 'var(--text-muted)' }}>VS</span>
+        </div>
+
+        {/* MONSTER side */}
+        <div className={`flex flex-col items-center gap-2 ${monsterIsHit ? 'is-hit' : ''} ${isRaging ? 'is-raging' : ''}`}>
+          <BattleCharacter
             name={monster.name}
-            spriteEmoji="👹" // Zameni sa sprajtom
+            spriteEmoji="👹"
             hp={battleState.monster_hp}
             maxHp={battleState.monster_max_hp}
             isRaging={isRaging}
             isHit={monsterIsHit}
-            damageNumbers={monsterDamageNumbers}
+            damageNumbers={monsterDmg}
           />
-        </div>
-
-        <div className="w-full md:w-80 bg-gray-900/70 border border-gray-700 rounded-xl p-3 flex flex-col pixel-panel backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-bold uppercase tracking-wider text-amber-100">Battle Log</h4>
-            <button
-              onClick={() => setShowLog(s => !s)}
-              className="text-xs text-amber-100 bg-black/20 px-2 py-1 rounded hover:bg-black/35"
-            >
-              {showLog ? 'Hide' : 'Show'}
-            </button>
-          </div>
-
-          {showLog ? (
-            <div
-              ref={logContainerRef}
-              className="flex-1 min-h-28 md:min-h-0 max-h-48 md:max-h-none overflow-y-auto pr-1 space-y-2"
-            >
-              {battleLog.length === 0 ? (
-                <p className="text-xs text-gray-400">No moves played yet.</p>
-              ) : (
-                battleLog.map((entry, idx) => (
-                  <div
-                    key={`${entry.turn}-${entry.actor}-${idx}`}
-                    className={`rounded-lg p-2 border text-xs ${entry.actor === 'hero'
-                      ? 'bg-blue-950/25 border-blue-700/40'
-                      : 'bg-red-950/25 border-red-700/40'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <p className="font-semibold text-gray-100">
-                        Turn {entry.turn} • {entry.actor === 'hero' ? 'Hero' : monster.name}
-                      </p>
-                      {entry.timestamp && (
-                        <p className="text-gray-400 text-xs">
-                          {new Date(entry.timestamp).toLocaleTimeString()}
-                        </p>
-                      )}
-                    </div>
-                    <p className="text-amber-100">{entry.moveName}</p>
-                    <p className="text-gray-300">
-                      {renderLogDetails(entry.damage, entry.healing, entry.buffDesc)}
-                    </p>
-                  </div>
-                ))
-              )}
+          {/* Monster HP bar */}
+          <div className="w-40">
+            <div className="flex justify-between text-[7px] mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <span>{monster.name}</span>
+              <span>{battleState.monster_hp}/{battleState.monster_max_hp}</span>
             </div>
-          ) : (
-            <div className="p-2 text-xs text-gray-400">Log hidden • {battleLog.length} entries</div>
-          )}
+            <div className="hp-bar-track w-full" style={{ clipPath: 'polygon(0 0, calc(100% - 2px) 0, 100% 2px, 100% 100%, 2px 100%, 0 calc(100% - 2px))' }}>
+              <motion.div
+                className={`hp-bar-fill ${hpClass(monsterHpPct)}`}
+                animate={{ width: `${monsterHpPct * 100}%` }}
+                transition={{ duration: 0.5, type: 'spring' }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Donji deo: Akcije */}
-      <div className="relative z-10 h-2/6 flex justify-center items-center">
-          <div className="w-full max-w-2xl bg-gray-800/70 rounded-2xl p-6 border border-gray-700 relative pixel-panel backdrop-blur-sm">
-          {isProcessing && (
-            <div className="absolute inset-0 bg-black/55 flex items-center justify-center z-10 rounded-2xl">
-              <span className="text-lg font-bold text-amber-100 animate-pulse tracking-[0.2em]">Processing...</span>
-            </div>
-          )}
-          <h3 className="font-bold text-amber-100 mb-4 uppercase tracking-[0.25em] text-center">Select Your Move</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* ── MOVE PANEL ── */}
+      <div className="relative z-10 flex-shrink-0 px-4 pb-4">
+        <div className="pixel-panel panel-gold relative p-4">
+          {/* Processing overlay */}
+          <AnimatePresence>
+            {isProcessing && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-20 flex items-center justify-center"
+                style={{ background: 'rgba(3,2,10,0.7)', backdropFilter: 'blur(2px)' }}
+              >
+                <motion.p
+                  className="text-[10px] tracking-[0.3em]"
+                  style={{ color: 'var(--gold)' }}
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1.2 }}
+                >
+                  ⚔ Processing...
+                </motion.p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Header row */}
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[8px] tracking-[0.3em] uppercase" style={{ color: 'var(--text-secondary)' }}>
+              ⚔ Choose Your Move
+            </p>
+            <button
+              onClick={() => setShowLog(s => !s)}
+              className="pixel-button text-[7px] py-1 px-2 flex items-center gap-1"
+              style={{ color: showLog ? 'var(--gold)' : undefined }}
+            >
+              <ScrollText size={10} />
+              {showLog ? 'Hide Log' : `Log (${battleLog.length})`}
+            </button>
+          </div>
+
+          {/* Move grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {equippedMoves.map((move, idx) => (
-              <MoveButton 
+              <MoveButton
                 key={idx}
                 move={move}
                 onClick={() => handleSelectMove(move)}
@@ -201,6 +248,42 @@ export default function BattleScreen() {
               />
             ))}
           </div>
+
+          {/* Battle log (inline collapsible) */}
+          <AnimatePresence>
+            {showLog && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div className="rune-divider mt-3 mb-2 text-[7px]">Battle Log</div>
+                <div ref={logRef} className="max-h-32 overflow-y-auto space-y-1">
+                  {battleLog.length === 0 ? (
+                    <p className="text-[7px] text-center py-2" style={{ color: 'var(--text-muted)' }}>No moves yet</p>
+                  ) : battleLog.map((entry, idx) => (
+                    <div
+                      key={`${entry.turn}-${entry.actor}-${idx}`}
+                      className={`text-[7px] px-2 py-1 leading-relaxed ${
+                        entry.actor === 'hero' ? 'battle-log-hero' : 'battle-log-monster'
+                      }`}
+                      style={{ borderLeft: `2px solid ${entry.actor === 'hero' ? '#6366f1' : '#8b1a1a'}` }}
+                    >
+                      <span style={{ color: 'var(--text-muted)' }}>T{entry.turn} · </span>
+                      <span style={{ color: entry.actor === 'hero' ? '#a5b4fc' : '#f87171' }}>
+                        {entry.actor === 'hero' ? '🗡 ' : '💀 '}
+                      </span>
+                      {entry.moveName}
+                      {entry.damage ? <span style={{ color: '#f87171' }}> −{entry.damage}</span> : null}
+                      {entry.healing ? <span style={{ color: '#4ade80' }}> +{entry.healing}</span> : null}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

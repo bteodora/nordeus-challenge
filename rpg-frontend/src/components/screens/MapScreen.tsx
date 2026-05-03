@@ -1,141 +1,237 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
-import { Swords, Shield, Eye } from 'lucide-react'
+import { Swords, Shield, Eye, ShoppingBag, Scroll, LogOut, Heart, Zap } from 'lucide-react'
 import { MoveManagementModal } from '../ui/MoveManagementModal'
 import ShopModal from '../ui/ShopModal'
 import { MonsterPreviewModal } from '../ui/MonsterPreviewModal'
 import type { Monster } from '../../api/client'
 
+const DIFFICULTY_COLORS = ['', '#4ade80', '#facc15', '#fb923c', '#f87171', '#c084fc']
+const DIFFICULTY_LABELS = ['', 'Weak', 'Common', 'Dangerous', 'Deadly', 'Legendary']
+
 export default function MapScreen() {
-  const { config, currentEncounterIndex, enterBattle, hero, equippedMoves, learnedMoves, equipMove, coins } = useGameStore()
+  const {
+    config, currentEncounterIndex, enterBattle,
+    hero, equippedMoves, learnedMoves, equipMove, coins,
+  } = useGameStore()
   const [isManageMovesOpen, setIsManageMovesOpen] = useState(false)
   const [isShopOpen, setIsShopOpen] = useState(false)
   const [selectedMonster, setSelectedMonster] = useState<Monster | null>(null)
 
-  if (!config) return <div>Loading...</div>
+  if (!config) return (
+    <div className="flex items-center justify-center h-full text-[9px] tracking-widest" style={{ color: 'var(--text-muted)' }}>
+      ⏳ Loading...
+    </div>
+  )
+
+  const heroHpPct = hero.currentHp / hero.maxHp
+  const hpColor = heroHpPct > 0.5 ? '#4ade80' : heroHpPct > 0.25 ? '#eab308' : '#f87171'
 
   return (
     <>
-      <div className="flex w-full h-full p-6 gap-6 bg-[radial-gradient(circle_at_50%_20%,rgba(70,52,26,0.26),transparent_20%),linear-gradient(180deg,#0d0f12_0%,#050506_100%)]">
-      
-      {/* Sidebar: Hero Info */}
-      <div className="w-1/4 bg-[#0b0f0c]/90 rounded-2xl p-6 border border-[#302316] flex flex-col pixel-panel">
-        <h2 className="text-2xl font-bold mb-2 text-amber-200">Knight</h2>
-        <p className="text-gray-300 mb-1 text-sm">Level {hero.level} • HP {hero.currentHp}/{hero.maxHp}</p>
-        <p className="text-amber-300 font-bold mb-6 text-sm">💰 {coins} Coins</p>
-        
-        <h3 className="font-bold text-gray-200 mb-3 border-b border-gray-700 pb-2 text-sm tracking-wide uppercase">Equipped Moves</h3>
-        <div className="flex flex-col gap-2 flex-grow">
-          {equippedMoves.map((move, idx) => (
-            <div key={idx} className="bg-[#15130d] p-3 rounded-lg flex justify-between items-center border border-[#3a2b1a]">
+      <div className="flex w-full h-full overflow-hidden" style={{ background: 'linear-gradient(160deg, rgba(10,8,20,0.97), rgba(5,5,12,0.99))' }}>
+
+        {/* ═══ SIDEBAR ═══ */}
+        <div className="w-56 flex-shrink-0 flex flex-col gap-3 p-4 border-r overflow-y-auto" style={{ borderColor: 'var(--border)', background: 'rgba(3,2,10,0.6)' }}>
+
+          {/* Hero card */}
+          <div className="pixel-panel panel-gold p-4">
+            <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="font-bold text-sm">{move.name}</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">{move.type}</p>
+                <p className="text-[10px] font-bold" style={{ color: 'var(--gold)' }}>⚔ Knight</p>
+                <p className="text-[7px] mt-1" style={{ color: 'var(--text-muted)' }}>Level {hero.level}</p>
               </div>
-              <Shield size={16} className={move.type === 'physical' ? 'text-orange-400' : 'text-purple-400'} />
+              <div className="text-[9px] font-bold" style={{ color: '#facc15' }}>💰 {coins}</div>
             </div>
-          ))}
+
+            {/* HP */}
+            <div className="mb-3">
+              <div className="flex justify-between text-[7px] mb-1" style={{ color: 'var(--text-secondary)' }}>
+                <span className="flex items-center gap-1"><Heart size={8} /> HP</span>
+                <span style={{ color: hpColor }}>{hero.currentHp}/{hero.maxHp}</span>
+              </div>
+              <div className="hp-bar-track">
+                <motion.div
+                  className={`hp-bar-fill ${heroHpPct > 0.5 ? 'hp-high' : heroHpPct > 0.25 ? 'hp-mid' : 'hp-low'}`}
+                  animate={{ width: `${heroHpPct * 100}%` }}
+                  transition={{ duration: 0.5, type: 'spring' }}
+                />
+              </div>
+            </div>
+
+            {/* Stats mini */}
+            <div className="grid grid-cols-2 gap-1">
+              {[
+                { icon: <Swords size={8} />, label: 'ATK', val: hero.stats?.attack,  color: '#fb923c' },
+                { icon: <Shield size={8} />, label: 'DEF', val: hero.stats?.defense, color: '#60a5fa' },
+                { icon: <Zap    size={8} />, label: 'MAG', val: hero.stats?.magic,   color: '#c084fc' },
+                { icon: <Heart  size={8} />, label: 'HP',  val: hero.stats?.health,  color: '#f87171' },
+              ].map(s => (
+                <div key={s.label} className="flex items-center gap-1 text-[7px]" style={{ color: 'var(--text-secondary)' }}>
+                  <span style={{ color: s.color }}>{s.icon}</span>
+                  <span>{s.label} {s.val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Equipped moves */}
+          <div className="pixel-panel p-3">
+            <p className="text-[7px] tracking-[0.2em] mb-2" style={{ color: 'var(--text-secondary)' }}>EQUIPPED MOVES</p>
+            <div className="flex flex-col gap-1">
+              {equippedMoves.map((move, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between px-2 py-1 text-[7px]"
+                  style={{ background: 'rgba(0,0,0,0.35)', borderLeft: `2px solid ${move.type === 'physical' ? '#fb923c44' : '#c084fc44'}` }}
+                >
+                  <span style={{ color: 'var(--text-primary)' }}>{move.name}</span>
+                  <span style={{ color: move.type === 'physical' ? '#fb923c' : '#c084fc' }}>
+                    {move.type === 'physical' ? '⚔' : '✦'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-col gap-2 mt-auto">
+            <button onClick={() => setIsManageMovesOpen(true)} className="pixel-button w-full justify-center gap-2">
+              <Scroll size={10} /> Moves
+            </button>
+            <button onClick={() => setIsShopOpen(true)} className="pixel-button w-full justify-center gap-2">
+              <ShoppingBag size={10} /> Shop
+            </button>
+            <button
+              onClick={() => { useGameStore.getState().saveRun(); useGameStore.getState().exitToMenu() }}
+              className="pixel-button w-full justify-center gap-2 text-[7px]"
+              style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}
+            >
+              <LogOut size={10} /> Save & Exit
+            </button>
+          </div>
         </div>
-        
-        <button 
-          onClick={() => setIsManageMovesOpen(true)}
-          className="mt-4 py-3 bg-[#2a2213] hover:bg-[#3b3019] rounded-xl font-bold transition-colors border border-[#4b3820] pixel-button">
-          Manage Moves (M)
-        </button>
-        <button 
-          onClick={() => setIsShopOpen(true)}
-          className="mt-3 py-2 bg-[#402616] hover:bg-[#5d3420] rounded-xl font-bold transition-colors border border-[#6e4c2a] pixel-button">
-          Shop
-        </button>
-        <button 
-          onClick={() => { useGameStore.getState().saveRun(); useGameStore.getState().exitToMenu(); }}
-          className="mt-3 py-2 bg-[#222120] hover:bg-[#2e2c28] rounded-xl font-bold transition-colors border border-[#3f3b35] pixel-button"
-        >
-          Save & Exit
-        </button>
-      </div>
 
-      {/* Main Map Area */}
-      <div className="w-3/4 bg-[#090b0a]/90 rounded-2xl border border-[#332417] p-8 overflow-y-auto flex flex-col items-center pixel-panel">
-        <h2 className="text-3xl font-black mb-10 text-amber-100 tracking-[0.2em]">THE GAUNTLET</h2>
-        
-        <div className="flex flex-col items-center gap-4 w-full max-w-md relative">
-          {config.monsters.map((monster, index) => {
-            const isCurrent = index === currentEncounterIndex
-            const isPast = index < currentEncounterIndex
-            const isLocked = index > currentEncounterIndex
+        {/* ═══ MAIN MAP ═══ */}
+        <div className="flex-1 flex flex-col items-center overflow-y-auto py-8 px-6 relative">
 
-            let cardClass = "w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all relative overflow-hidden "
-            if (isCurrent) cardClass += "bg-[#331a12] border-[#e0a54a] cursor-pointer hover:scale-105 hover:bg-[#432116] shadow-[0_0_20px_rgba(224,165,74,0.15)]"
-            else if (isPast) cardClass += "bg-[#121311] border-[#37553b] opacity-55 grayscale"
-            else cardClass += "bg-[#0f100f] border-[#2d2d2d] opacity-75"
+          {/* Atmospheric top glow */}
+          <div className="pointer-events-none absolute top-0 inset-x-0 h-40"
+            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(212,169,74,0.05), transparent)' }}
+          />
 
-            return (
-              <motion.div 
-                key={monster.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={cardClass}
-                onClick={() => isCurrent && enterBattle(index)}
-              >
-                <div className="flex items-center gap-4 flex-1">
-                    <div className="text-4xl filter drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]">{isPast ? '💀' : '👹'}</div>
-                  <div>
-                    <h3 className={`font-bold ${isCurrent ? 'text-amber-100' : 'text-gray-400'}`}>{monster.name}</h3>
-                    <div className="text-[10px] text-amber-300 tracking-wider uppercase">
-                       {'⚔️'.repeat(monster.difficulty)}
+          <motion.h2
+            className="text-lg tracking-[0.3em] mb-2"
+            style={{ color: 'var(--gold)', textShadow: '0 0 20px rgba(212,169,74,0.3)' }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            THE GAUNTLET
+          </motion.h2>
+          <p className="text-[7px] tracking-[0.3em] mb-8" style={{ color: 'var(--text-muted)' }}>
+            {currentEncounterIndex} / {config.monsters.length} defeated
+          </p>
+
+          {/* Path line */}
+          <div className="relative w-full max-w-md flex flex-col items-center gap-3">
+            <div
+              className="absolute top-6 bottom-6 w-px opacity-30"
+              style={{
+                left: '50%',
+                background: 'linear-gradient(180deg, var(--gold-dim), var(--verdant), var(--border))',
+              }}
+            />
+
+            {config.monsters.map((monster, index) => {
+              const isCurrent = index === currentEncounterIndex
+              const isPast    = index < currentEncounterIndex
+              const isLocked  = index > currentEncounterIndex
+
+              return (
+                <motion.div
+                  key={monster.id}
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.06, duration: 0.4, ease: [0.22,1,0.36,1] }}
+                  className={`map-node w-full flex items-center justify-between p-3 ${
+                    isCurrent ? 'map-node-current' : isPast ? 'map-node-past' : 'map-node-locked'
+                  }`}
+                  onClick={() => isCurrent && enterBattle(index)}
+                >
+                  {/* Left: emoji + name */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl leading-none" style={{ filter: isPast ? 'grayscale(1)' : 'none' }}>
+                      {isPast ? '💀' : '👹'}
+                    </span>
+                    <div>
+                      <p className="text-[9px] font-bold" style={{ color: isCurrent ? 'var(--gold)' : 'var(--text-secondary)' }}>
+                        {monster.name}
+                      </p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {Array.from({ length: monster.difficulty }).map((_, i) => (
+                          <span key={i} className="text-[6px]" style={{ color: DIFFICULTY_COLORS[monster.difficulty] }}>⚔</span>
+                        ))}
+                        <span className="text-[6px]" style={{ color: DIFFICULTY_COLORS[monster.difficulty] }}>
+                          {DIFFICULTY_LABELS[monster.difficulty]}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setSelectedMonster(monster); }}
-                    className="p-2 bg-[#17323a] hover:bg-[#214952] rounded-lg transition-colors border border-[#33555d] pixel-button" 
-                    title="Preview"
-                  >
-                    <Eye size={16} className="text-white" />
-                  </button>
-                  {isCurrent && (
-                    <button className="px-4 py-2 bg-[#7c261d] rounded-lg font-bold flex items-center gap-2 border border-[#a34a39] pixel-button">
-                      <Swords size={16} /> FIGHT
+
+                  {/* Right: actions */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={e => { e.stopPropagation(); setSelectedMonster(monster) }}
+                      className="pixel-button py-1 px-2"
+                      title="Preview"
+                    >
+                      <Eye size={10} />
                     </button>
-                  )}
-                  {isPast && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-300 font-bold text-sm tracking-wide">DEFEATED</span>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); enterBattle(index, true); }}
-                        className="px-3 py-1 bg-[#6d4d22] hover:bg-[#8b632a] rounded font-bold text-sm pixel-button"
+
+                    {isCurrent && (
+                      <button
+                        onClick={e => { e.stopPropagation(); enterBattle(index) }}
+                        className="pixel-button py-1.5 px-3 flex items-center gap-1"
+                        style={{ color: '#f87171', borderColor: 'var(--crimson)', background: 'rgba(139,26,26,0.3)' }}
                       >
-                        Replay
+                        <Swords size={10} />
+                        <span className="text-[7px]">FIGHT</span>
                       </button>
-                    </div>
-                  )}
-                  {isLocked && <span className="text-gray-500 font-bold text-sm tracking-wide">LOCKED</span>}
-                </div>
-              </motion.div>
-            )
-          })}
-          
-          {/* Linija koja povezuje karte */}
-          <div className="absolute left-1/2 top-10 bottom-10 w-1 bg-gradient-to-b from-[#4a3b22] via-[#274b2f] to-[#1b1f1a] -z-10 transform -translate-x-1/2"></div>
+                    )}
+
+                    {isPast && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[7px] tracking-wider" style={{ color: 'var(--verdant)' }}>✓ DONE</span>
+                        <button
+                          onClick={e => { e.stopPropagation(); enterBattle(index, true) }}
+                          className="pixel-button py-1 px-2 text-[7px]"
+                        >
+                          Replay
+                        </button>
+                      </div>
+                    )}
+
+                    {isLocked && (
+                      <span className="text-[7px]" style={{ color: 'var(--text-muted)' }}>🔒</span>
+                    )}
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-    </div>
-
-    <MoveManagementModal
-      isOpen={isManageMovesOpen}
-      onClose={() => setIsManageMovesOpen(false)}
-      allMoves={learnedMoves}
-      equippedMoves={equippedMoves}
-      onEquipMove={equipMove}
-    />
-    <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} />
-    <MonsterPreviewModal isOpen={!!selectedMonster} onClose={() => setSelectedMonster(null)} monster={selectedMonster} />
-    <MonsterPreviewModal isOpen={!!selectedMonster} onClose={() => setSelectedMonster(null)} monster={selectedMonster} />
+      <MoveManagementModal
+        isOpen={isManageMovesOpen}
+        onClose={() => setIsManageMovesOpen(false)}
+        allMoves={learnedMoves}
+        equippedMoves={equippedMoves}
+        onEquipMove={equipMove}
+      />
+      <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} />
+      <MonsterPreviewModal isOpen={!!selectedMonster} onClose={() => setSelectedMonster(null)} monster={selectedMonster} />
     </>
   )
 }

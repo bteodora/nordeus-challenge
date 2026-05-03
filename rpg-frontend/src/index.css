@@ -1,189 +1,416 @@
 @import "tailwindcss";
 
-/* Pixel-art dark fantasy theme globals */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+/* ═══════════════════════════════════════════════
+   DARK FANTASY FOREST — DESIGN TOKENS
+═══════════════════════════════════════════════ */
 :root {
-	--bg-1: #07060a; /* very dark */
-	--bg-2: #0f0810; /* dark purple */
-	--panel: #0b0a0e;
-	--accent: #d1a34a; /* gold */
-	--accent-2: #9b59b6; /* purple */
-	--muted: #9aa0a6;
+  --ink:        #03020a;
+  --void:       #07060e;
+  --deep:       #0d0b18;
+  --surface:    #110f1e;
+  --raised:     #181528;
+  --border:     #2a2245;
+  --border-glow:#4a3d7a;
+
+  --gold:       #d4a94a;
+  --gold-dim:   #7a5f25;
+  --gold-glow:  rgba(212,169,74,0.25);
+  --ember:      #c0521a;
+  --ember-dim:  #6b2d0c;
+  --crimson:    #8b1a1a;
+  --verdant:    #1e5e30;
+  --arcane:     #6b3fa0;
+  --arcane-dim: #3d2060;
+
+  --text-primary:   #e8dfc8;
+  --text-secondary: #9a8f7a;
+  --text-muted:     #524b3e;
+
+  --shadow-gold:   0 0 20px rgba(212,169,74,0.2), 0 0 60px rgba(212,169,74,0.05);
+  --shadow-ember:  0 0 20px rgba(192,82,26,0.3),  0 0 60px rgba(192,82,26,0.08);
+  --shadow-arcane: 0 0 20px rgba(107,63,160,0.3), 0 0 60px rgba(107,63,160,0.08);
+  --shadow-deep:   0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);
 }
+
+/* ═══════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
 
 html, body, #root {
-	height: 100%;
-}
-
-.pixel-ui {
-	font-family: 'Press Start 2P', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
-	color: #e6e1d9;
-	image-rendering: pixelated;
-	-webkit-font-smoothing: none;
-	-moz-osx-font-smoothing: grayscale;
-}
-
-
-
-.forest-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease-out;
+  margin: 0;
+  padding: 0;
+  background: var(--ink);
+  overflow: hidden;
 }
 
-/* Novi stil za dugmiće - Rune na kamenju */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+
+/* ═══════════════════════════════════════════════
+   PIXEL UI
+═══════════════════════════════════════════════ */
+.pixel-ui {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  color: var(--text-primary);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, canvas { image-rendering: pixelated; }
+
+/* ═══════════════════════════════════════════════
+   PARALLAX LAYERS — FIXED
+   The key fix: position absolute + oversized so
+   parallax movement never shows edges
+═══════════════════════════════════════════════ */
+.parallax-layer {
+  position: absolute;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════
+   OVERLAYS
+═══════════════════════════════════════════════ */
+.vignette {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 65% at 50% 50%, transparent 35%, rgba(0,0,0,0.82) 100%);
+  z-index: 1;
+}
+
+.crt-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,0,0,0.07) 2px,
+    rgba(0,0,0,0.07) 3px
+  );
+  z-index: 2;
+  mix-blend-mode: multiply;
+}
+
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  mix-blend-mode: soft-light;
+  opacity: 0.04;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="200" height="200" filter="url(%23n)" opacity="1"/></svg>');
+  background-size: 200px 200px;
+  animation: grain-drift 8s steps(10) infinite;
+}
+@keyframes grain-drift {
+  0%,100% { transform: translate(0,0); }
+  10%  { transform: translate(-2%,-3%); }
+  30%  { transform: translate(-1%, 4%); }
+  50%  { transform: translate(-3%, 1%); }
+  70%  { transform: translate( 4%, 3%); }
+  90%  { transform: translate( 2%,-4%); }
+}
+
+.mist-band {
+  pointer-events: none;
+  position: fixed;
+  inset-x: 0;
+  bottom: 0;
+  height: 200px;
+  background: linear-gradient(0deg, rgba(100,120,150,0.1) 0%, transparent 100%);
+  z-index: 1;
+  animation: mist-pulse 7s ease-in-out infinite alternate;
+}
+@keyframes mist-pulse {
+  from { opacity: 0.7; transform: translateY(6px); }
+  to   { opacity: 1.0; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════════ */
+.pixel-panel {
+  background: linear-gradient(135deg, rgba(17,15,30,0.93), rgba(7,6,14,0.97));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(255,255,255,0.04);
+  position: relative;
+  overflow: hidden;
+  /* Notched corners for pixel-art feel */
+  clip-path: polygon(
+    0 5px, 5px 5px, 5px 0,
+    calc(100% - 5px) 0, calc(100% - 5px) 5px, 100% 5px,
+    100% calc(100% - 5px), calc(100% - 5px) calc(100% - 5px), calc(100% - 5px) 100%,
+    5px 100%, 5px calc(100% - 5px), 0 calc(100% - 5px)
+  );
+}
+.pixel-panel.panel-gold   { border-color: var(--gold-dim);   box-shadow: var(--shadow-deep), var(--shadow-gold); }
+.pixel-panel.panel-ember  { border-color: var(--ember-dim);  box-shadow: var(--shadow-deep), var(--shadow-ember); }
+.pixel-panel.panel-arcane { border-color: var(--arcane-dim); box-shadow: var(--shadow-deep), var(--shadow-arcane); }
+.pixel-panel.panel-crimson { border-color: var(--crimson);   box-shadow: var(--shadow-deep), var(--shadow-ember); }
+
+/* ═══════════════════════════════════════════════
+   RUNE BUTTONS — MAIN MENU
+═══════════════════════════════════════════════ */
 .rune-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px 18px;
-  
-  /* Izgled kamena */
-  /*background: url('/assets/stone-texture.png'); /* Pixel art tekstura kamena */
-  background-color: #2a2f33;
-  background-blend-mode: multiply;
-  
-  color: #ffc34d; /* Boja svetleće rune */
-  border: none;
-  border-radius: 8px;
-  
-  /* "Urezani" izgled teksta */
-  text-shadow: 1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
-  
-  /* Pixelated ivice koristeći border-image */
-  border: 8px solid transparent;
-  border-image: url('/assets/pixel-border-stone.png') 8 stretch; /* Slika za ivicu */
-  
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  position: relative;
+  gap: 10px;
+  padding: 14px 22px;
   width: 100%;
+  background: linear-gradient(180deg, rgba(42,33,20,0.97), rgba(20,15,7,0.99), rgba(30,22,12,0.97));
+  color: var(--gold);
+  border: none;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--gold-glow), 0 1px 0 #000;
+  clip-path: polygon(
+    0 6px, 6px 6px, 6px 0,
+    calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px,
+    100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%,
+    6px 100%, 6px calc(100% - 6px), 0 calc(100% - 6px)
+  );
+  box-shadow: inset 0 1px 0 rgba(212,169,74,0.12), inset 0 -2px 0 rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.7);
+  transition: color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.1s;
 }
-
-.rune-button:hover::before {
+.rune-button::before {
   content: '';
   position: absolute;
-  inset: -4px; /* Malo veće od dugmeta */
-  background: radial-gradient(circle, rgba(255, 195, 77, 0.3) 0%, transparent 60%);
-  border-radius: 12px;
-  animation: pulse-glow 2s infinite ease-in-out;
-  z-index: -1;
+  inset: 1px;
+  border: 1px solid rgba(212,169,74,0.06);
+  clip-path: inherit;
+  pointer-events: none;
 }
-
-@keyframes pulse-glow {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.05); opacity: 0.8; }
+.rune-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(212,169,74,0.08) 50%, transparent 100%);
+  transform: translateX(-200%);
+  transition: transform 0.5s ease;
 }
-
-/* Stilizacija naslova - ako ne koristite sliku */
-.game-title-text {
-  font-size: 4rem; /* ili veći */
-  font-weight: black;
-  color: #c8bca0; /* Boja kamena */
-  text-shadow: 
-    /* Senka za 3D efekat */
-    0px 2px 0px #9a8f74,
-    0px 4px 0px #6d6452,
-    0px 6px 0px #423d33,
-    /* Unutrašnja senka za urezani izgled */
-    inset 0px -2px 1px rgba(0,0,0,0.4);
-  letter-spacing: 0.1em;
+.rune-button:hover::after { transform: translateX(200%); }
+.rune-button:hover {
+  color: #f0c86a;
+  background: linear-gradient(180deg, rgba(60,45,22,0.98), rgba(32,23,10,1), rgba(45,33,15,0.98));
+  box-shadow: inset 0 1px 0 rgba(212,169,74,0.22), inset 0 -2px 0 rgba(0,0,0,0.5), 0 0 24px rgba(212,169,74,0.18), 0 8px 24px rgba(0,0,0,0.8);
 }
+.rune-button:active { transform: translateY(2px); }
 
-.pixel-panel {
-  border: 12px solid transparent;
-  border-image: url('/assets/pixel-border-wood.png') 12 stretch;
-  background-color: rgba(11, 10, 14, 0.85); /* Malo manje prozirno za bolju čitljivost */
-  backdrop-filter: blur(4px);
-  box-shadow: none;
-  border-radius: 0px;
-  position: relative; /* Dodajemo position relative za pseudo-elemente */
-  overflow: hidden;  /* Dodajemo overflow hidden */
-}
-
-/* moss edging: tiny green pixels along the top-left edge */
-.pixel-panel::before {
-	content: '';
-	position: absolute;
-	pointer-events: none;
-	left: 6px;
-	top: -6px;
-	width: calc(100% - 12px);
-	height: 10px;
-	background-image: repeating-linear-gradient(90deg, #183a1a 0 2px, transparent 2px 6px, #2b6b2b 6px 8px);
-	opacity: 0.9;
-	mix-blend-mode: multiply;
-	border-radius: 2px;
-}
-
-/* Pixel buttons */
+/* ═══════════════════════════════════════════════
+   PIXEL SECONDARY BUTTON
+═══════════════════════════════════════════════ */
 .pixel-button {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	padding: 10px 14px;
-	background: linear-gradient(180deg, #3a0f12, #2a0508);
-	color: var(--accent);
-	border: 3px solid #000;
-	box-shadow: 4px 4px 0 rgba(0,0,0,0.7);
-	text-transform: uppercase;
-	letter-spacing: 1px;
-	font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  background: linear-gradient(180deg, var(--raised), var(--surface));
+  border: 1px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s;
+  clip-path: polygon(
+    0 3px, 3px 3px, 3px 0,
+    calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px,
+    100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%,
+    3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px)
+  );
+  box-shadow: 0 3px 0 rgba(0,0,0,0.5);
 }
-.pixel-button:hover { transform: translateY(-2px); }
+.pixel-button:hover {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+  background: linear-gradient(180deg, #221c10, #140e06);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.5), 0 0 14px var(--gold-glow);
+}
+.pixel-button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.5); }
 
-/* torch / ember glow on buttons */
-.pixel-button::after {
-	content: '';
-	display: block;
-	position: absolute;
-	pointer-events: none;
-	inset: 0;
-	box-shadow: inset 0 -8px 24px rgba(180,80,20,0.12), 0 6px 24px rgba(180,80,20,0.06);
+/* ═══════════════════════════════════════════════
+   HP BAR
+═══════════════════════════════════════════════ */
+.hp-bar-track {
+  height: 10px;
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  position: relative;
+}
+.hp-bar-fill {
+  height: 100%;
+  transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+.hp-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.22) 0%, transparent 55%);
+}
+.hp-high  { background: linear-gradient(90deg, #15803d, #4ade80); }
+.hp-mid   { background: linear-gradient(90deg, #854d0e, #eab308); }
+.hp-low   { background: linear-gradient(90deg, #7f1d1d, #f87171); box-shadow: 0 0 6px rgba(248,113,113,0.5); }
+
+/* ═══════════════════════════════════════════════
+   BATTLE EFFECTS
+═══════════════════════════════════════════════ */
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%  { transform: translateX(-7px); }
+  40%  { transform: translateX(7px); }
+  60%  { transform: translateX(-4px); }
+  80%  { transform: translateX(4px); }
+}
+.is-hit { animation: shake 0.3s ease; }
+
+@keyframes rage-pulse {
+  0%,100% { filter: brightness(1)   drop-shadow(0 0  4px rgba(255,60,30,0.3)); }
+  50%      { filter: brightness(1.3) drop-shadow(0 0 20px rgba(255,60,30,0.9)); }
+}
+.is-raging { animation: rage-pulse 0.7s ease-in-out infinite; }
+
+@keyframes damage-float {
+  0%   { transform: translateY(0)   scale(1.3); opacity: 1; }
+  60%  { transform: translateY(-44px) scale(1);   opacity: 1; }
+  100% { transform: translateY(-64px) scale(0.8); opacity: 0; }
+}
+.damage-number {
+  pointer-events: none;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+  animation: damage-float 1s ease-out forwards;
 }
 
-/* ensure panels are positioned relative for pseudo-elements */
-.pixel-panel { position: relative; overflow: hidden; }
-
-/* small moss clumps on buttons */
-.pixel-button { position: relative; overflow: visible; }
-.pixel-button::before {
-	content: '';
-	position: absolute;
-	left: 6px;
-	bottom: -6px;
-	width: 18px;
-	height: 8px;
-	background-image: radial-gradient(circle at 25% 30%, #2e7b3c 0 3px, transparent 4px), radial-gradient(circle at 70% 60%, #1f5f2a 0 2px, transparent 3px);
-	transform: rotate(-6deg);
-	opacity: 0.95;
+/* ═══════════════════════════════════════════════
+   MONSTER TELL
+═══════════════════════════════════════════════ */
+.monster-tell {
+  background: linear-gradient(135deg, rgba(100,15,15,0.85), rgba(50,8,8,0.96));
+  border: 1px solid var(--crimson);
+  box-shadow: 0 0 20px rgba(139,26,26,0.45), var(--shadow-deep);
+  animation: tell-pulse 1.4s ease-in-out infinite;
+}
+@keyframes tell-pulse {
+  0%,100% { box-shadow: 0 0 16px rgba(139,26,26,0.4), var(--shadow-deep); }
+  50%      { box-shadow: 0 0 36px rgba(220,30,30,0.65), var(--shadow-deep); }
 }
 
-/* Scanlines / CRT overlay */
-.crt-overlay {
-	pointer-events: none;
-	position: fixed;
-	inset: 0;
-	mix-blend-mode: overlay;
-	background-image: linear-gradient(rgba(255,255,255,0.02) 1px, rgba(0,0,0,0) 1px);
-	background-size: 100% 3px;
-	opacity: 0.12;
+/* ═══════════════════════════════════════════════
+   TITLE ANIMATION
+═══════════════════════════════════════════════ */
+@keyframes title-breathe {
+  0%,100% { filter: drop-shadow(0 0 14px rgba(212,169,74,0.45)) drop-shadow(0 0 44px rgba(212,169,74,0.12)); }
+  50%      { filter: drop-shadow(0 0 28px rgba(212,169,74,0.7))  drop-shadow(0 0 70px rgba(212,169,74,0.22)); }
+}
+.title-glow { animation: title-breathe 3.5s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════════════
+   VICTORY SHIMMER
+═══════════════════════════════════════════════ */
+@keyframes victory-shimmer {
+  0%   { transform: translateX(-120%) rotate(30deg); }
+  100% { transform: translateX(420%)  rotate(30deg); }
+}
+.victory-shimmer { position: relative; overflow: hidden; }
+.victory-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(212,169,74,0.18) 50%, transparent 65%);
+  animation: victory-shimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
 }
 
-/* Slight film grain */
-.grain {
-	position: fixed; inset: 0; pointer-events: none; mix-blend-mode: soft-light; opacity: 0.06;
-	background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><rect width="4" height="4" fill="black" opacity="0"/><circle cx="1" cy="1" r="0.8" fill="white" opacity="0.05"/></svg>');
-	background-size: 4px 4px;
+/* ═══════════════════════════════════════════════
+   MAP NODES
+═══════════════════════════════════════════════ */
+.map-node {
+  position: relative;
+  transition: all 0.2s;
+  clip-path: polygon(
+    0 4px, 4px 4px, 4px 0,
+    calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+    4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+  );
+}
+.map-node-current {
+  background: linear-gradient(135deg, rgba(100,42,14,0.92), rgba(48,20,8,0.96));
+  border: 1px solid var(--gold-dim);
+  box-shadow: 0 0 24px var(--gold-glow), var(--shadow-deep);
+  cursor: pointer;
+}
+.map-node-current:hover {
+  box-shadow: 0 0 36px rgba(212,169,74,0.38), var(--shadow-deep);
+  transform: translateY(-2px) scale(1.01);
+}
+.map-node-past   { background: rgba(18,26,18,0.65); border: 1px solid var(--verdant); opacity: 0.6; }
+.map-node-locked { background: rgba(10,10,16,0.65); border: 1px solid var(--border); opacity: 0.45; }
+
+/* ═══════════════════════════════════════════════
+   DIVIDERS
+═══════════════════════════════════════════════ */
+.rune-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 8px;
+}
+.rune-divider::before,
+.rune-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
 }
 
-/* Ensure images scaled look pixelated */
-img, canvas { image-rendering: pixelated; }
+/* ═══════════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════════ */
+.text-gold   { color: var(--gold); }
+.text-ember  { color: var(--ember); }
+.text-arcane { color: #a78bfa; }
+.tracking-rune { letter-spacing: 0.2em; }
+
+@keyframes dot-pulse {
+  0%,100% { opacity: 0.4; transform: scale(1); }
+  50%     { opacity: 1;   transform: scale(1.4); }
+}
+.dot-pulse { animation: dot-pulse 2s ease-in-out infinite; }
+
+/* Forest fallback gradient (when images fail to load) */
+.forest-fallback {
+  background:
+    radial-gradient(ellipse 60% 40% at 75% 20%, rgba(25,15,55,0.9), transparent),
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(8,24,14,0.8), transparent),
+    linear-gradient(180deg, var(--deep) 0%, var(--ink) 100%);
+}

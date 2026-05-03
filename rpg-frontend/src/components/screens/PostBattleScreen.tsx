@@ -1,199 +1,211 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
+import { Swords, Shield, Zap, Heart, ChevronRight } from 'lucide-react'
 
 export default function PostBattleScreen() {
   const {
-    config,
-    currentEncounterIndex,
-    didWinBattle,
-    newlyLearnedMove,
-    hero,
-    equippedMoves,
-    runStats,
-    continueAfterBattle,
-    equipMove,
+    config, currentEncounterIndex, didWinBattle,
+    newlyLearnedMove, hero, equippedMoves,
+    runStats, continueAfterBattle, equipMove,
+    currentMonster, endlessMode,
   } = useGameStore()
 
-  if (!config) return <div>Loading...</div>
+  if (!config) return null
 
-  const { currentMonster, endlessMode } = useGameStore()
-  const monster = endlessMode && currentMonster ? currentMonster : config.monsters[currentEncounterIndex]
+  const monster = endlessMode && currentMonster
+    ? currentMonster
+    : config.monsters[currentEncounterIndex]
 
-  const handleEquipMove = (slot: number) => {
-    if (newlyLearnedMove) {
-      equipMove(newlyLearnedMove, slot)
-    }
+  const handleEquip = (slot: number) => {
+    if (newlyLearnedMove) equipMove(newlyLearnedMove, slot)
   }
 
-  return (
-    <div className="w-full h-screen bg-gradient-to-b from-gray-900 to-black overflow-y-auto p-4 flex items-start justify-center pt-4">
-      {didWinBattle ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-xl bg-gradient-to-br from-green-900/30 to-gray-900 rounded-xl border-2 border-green-500/50 p-6 pixel-panel"
-        >
-          {/* Victory Header */}
-          <div className="text-center mb-6">
-            <div className="text-5xl mb-2">⚔️</div>
-            <h1 className="text-3xl font-black text-green-300 mb-1 tracking-[0.2em]">VICTORY!</h1>
-            <p className="text-gray-400 text-sm">Defeated {monster.name}</p>
-          </div>
+  const accentColor = didWinBattle ? 'var(--verdant)' : 'var(--crimson)'
+  const panelClass  = didWinBattle ? 'panel-gold'    : 'panel-crimson'
 
-          {/* Hero Progress */}
+  return (
+    <div
+      className="w-full h-full flex items-center justify-center p-4 overflow-y-auto relative"
+      style={{
+        background: didWinBattle
+          ? 'radial-gradient(ellipse at 50% 30%, rgba(20,60,30,0.5), transparent 60%), linear-gradient(180deg, var(--deep), var(--ink))'
+          : 'radial-gradient(ellipse at 50% 30%, rgba(80,10,10,0.5), transparent 60%), linear-gradient(180deg, var(--deep), var(--ink))',
+      }}
+    >
+      {/* Background glow */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: didWinBattle
+            ? 'radial-gradient(ellipse 60% 40% at 50% 10%, rgba(30,94,48,0.15), transparent)'
+            : 'radial-gradient(ellipse 60% 40% at 50% 10%, rgba(139,26,26,0.2), transparent)',
+        }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.93, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className={`pixel-panel ${panelClass} w-full max-w-lg p-6 relative z-10 ${didWinBattle ? 'victory-shimmer' : ''}`}
+      >
+        {/* ── Header ── */}
+        <div className="text-center mb-6">
           <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-sm pixel-panel"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.15, type: 'spring', bounce: 0.4 }}
+            className="text-5xl mb-3"
           >
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <p className="text-gray-400 text-xs uppercase">HP Restored</p>
-                <p className="text-lg font-bold text-green-400">+{Math.max(0, hero.currentHp - (runStats.totalDamageReceived > 0 ? hero.currentHp - runStats.totalDamageReceived : 0))}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs uppercase">XP Gained</p>
-                <p className="text-lg font-bold text-yellow-400">+{monster.xp_reward}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs uppercase">Level</p>
-                <p className="text-lg font-bold text-blue-400">{hero.level}</p>
-              </div>
-            </div>
-            {runStats.lastStatGains && (
-              <div className="mt-4 pt-4 border-t border-gray-700">
-                <p className="text-gray-400 text-xs uppercase mb-2">⭐ Stats Improved</p>
-                <div className="grid grid-cols-4 gap-2 text-xs">
-                  <div>
-                    <p className="text-gray-500">Health</p>
-                    <p className="text-green-400 font-bold">+{runStats.lastStatGains.health}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Attack</p>
-                    <p className="text-red-400 font-bold">+{runStats.lastStatGains.attack}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Defense</p>
-                    <p className="text-blue-400 font-bold">+{runStats.lastStatGains.defense}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Magic</p>
-                    <p className="text-purple-400 font-bold">+{runStats.lastStatGains.magic}</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {didWinBattle ? '⚔️' : '💀'}
           </motion.div>
 
-          {/* New Move Section */}
-          {newlyLearnedMove && (
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="text-xl tracking-[0.3em] mb-1"
+            style={{
+              color: didWinBattle ? '#4ade80' : '#f87171',
+              textShadow: `0 0 20px ${didWinBattle ? 'rgba(74,222,128,0.4)' : 'rgba(248,113,113,0.4)'}`,
+            }}
+          >
+            {didWinBattle ? 'VICTORY!' : 'DEFEATED'}
+          </motion.h1>
+
+          <p className="text-[8px]" style={{ color: 'var(--text-muted)' }}>
+            {didWinBattle ? `Defeated ${monster.name}` : `Fallen before ${monster.name}`}
+          </p>
+        </div>
+
+        {/* ── Rune divider ── */}
+        <div className="rune-divider mb-5">✦</div>
+
+        {/* ── Stats row ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-3 gap-2 mb-5"
+        >
+          {didWinBattle ? (
+            <>
+              <StatCard label="XP Gained"     value={`+${monster.xp_reward}`} color="#facc15" icon={<Zap size={12} />} />
+              <StatCard label="Level"         value={hero.level}              color="#60a5fa" icon={<Shield size={12} />} />
+              <StatCard label="Monsters"      value={runStats.monstersDefeated} color="#4ade80" icon={<Swords size={12} />} />
+            </>
+          ) : (
+            <>
+              <StatCard label="Dmg Dealt"  value={runStats.totalDamageDealt}   color="#f87171" icon={<Swords size={12} />} />
+              <StatCard label="Turns"      value={runStats.totalTurns}          color="#60a5fa" icon={<Shield size={12} />} />
+              <StatCard label="Level"      value={hero.level}                   color="#facc15" icon={<Zap size={12} />} />
+            </>
+          )}
+        </motion.div>
+
+        {/* ── Stat gains (victory) ── */}
+        {didWinBattle && runStats.lastStatGains && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.38 }}
+            className="pixel-panel p-3 mb-4"
+          >
+            <p className="text-[7px] tracking-[0.2em] mb-2" style={{ color: 'var(--text-secondary)' }}>
+              ⭐ STATS IMPROVED
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: 'HP',  val: runStats.lastStatGains.health,  color: '#f87171' },
+                { label: 'ATK', val: runStats.lastStatGains.attack,  color: '#fb923c' },
+                { label: 'DEF', val: runStats.lastStatGains.defense, color: '#60a5fa' },
+                { label: 'MAG', val: runStats.lastStatGains.magic,   color: '#c084fc' },
+              ].map(s => (
+                <div key={s.label} className="text-center">
+                  <p className="text-[7px]" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
+                  <p className="text-[10px] font-bold" style={{ color: s.color }}>+{s.val}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── New Move ── */}
+        <AnimatePresence>
+          {didWinBattle && newlyLearnedMove && (
             <motion.div
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 rounded-lg p-4 mb-4 border-2 border-purple-500/50 pixel-panel"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="pixel-panel panel-arcane p-4 mb-4"
             >
-              <h2 className="font-bold text-white text-sm mb-3 uppercase tracking-wider">✨ New Move Learned!</h2>
-              <div className="bg-gray-900 rounded-lg p-3 mb-3 border border-purple-500/30 text-sm">
-                <h3 className="text-lg font-bold text-purple-300">{newlyLearnedMove.name}</h3>
-                <p className="text-xs text-gray-400 mt-1">
-                  <span className="text-purple-400 font-bold capitalize">{newlyLearnedMove.type}</span> • {newlyLearnedMove.effect}
+              <p className="text-[7px] tracking-[0.2em] mb-3" style={{ color: '#a78bfa' }}>
+                ✨ NEW MOVE LEARNED
+              </p>
+              <div className="mb-3 p-2" style={{ background: 'rgba(107,63,160,0.15)', borderLeft: '2px solid #6b3fa0' }}>
+                <p className="text-[10px] font-bold" style={{ color: '#c4b5fd' }}>{newlyLearnedMove.name}</p>
+                <p className="text-[7px] mt-1" style={{ color: 'var(--text-secondary)' }}>
+                  {newlyLearnedMove.type} · {newlyLearnedMove.effect}
                 </p>
               </div>
-              <p className="text-xs text-gray-400 mb-3">
-                Replace a move to add this to your arsenal:
-              </p>
+              <p className="text-[7px] mb-2" style={{ color: 'var(--text-muted)' }}>Replace a move:</p>
               <div className="grid grid-cols-2 gap-2">
                 {equippedMoves.map((move, idx) => (
                   <motion.button
                     key={idx}
-                    onClick={() => handleEquipMove(idx)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 border border-gray-600 transition-all text-xs"
+                    onClick={() => handleEquip(idx)}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="pixel-button w-full justify-between"
                   >
-                    <p className="font-bold text-white truncate">{move.name}</p>
-                    <p className="text-gray-400 text-xs">Slot {idx + 1}</p>
+                    <span className="text-[7px] truncate">{move.name}</span>
+                    <span className="text-[7px] opacity-50">S{idx + 1}</span>
                   </motion.button>
                 ))}
               </div>
             </motion.div>
           )}
+        </AnimatePresence>
 
-          {/* Battle Stats - Compact */}
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-xs pixel-panel"
-          >
-            <p className="text-gray-400 font-bold mb-2 uppercase">Battle Stats</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div><p className="text-gray-500">Damage Dealt:</p><p className="text-red-400 font-bold">{runStats.totalDamageDealt}</p></div>
-              <div><p className="text-gray-500">Turns Taken:</p><p className="text-blue-400 font-bold">{runStats.totalTurns}</p></div>
-            </div>
-          </motion.div>
-
-          {/* Action Button */}
-          <motion.button
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            onClick={continueAfterBattle}
-            className="w-full py-3 px-6 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95 pixel-button"
-          >
-            Continue to Next Battle →
-          </motion.button>
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-xl bg-gradient-to-br from-red-900/30 to-gray-900 rounded-xl border-2 border-red-500/50 p-6 pixel-panel"
+        {/* ── Action button ── */}
+        <motion.button
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          onClick={continueAfterBattle}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          className="w-full py-4 flex items-center justify-center gap-3 text-[10px] tracking-[0.25em] font-bold transition-all"
+          style={{
+            background: didWinBattle
+              ? 'linear-gradient(135deg, rgba(20,83,45,0.9), rgba(10,50,25,0.95))'
+              : 'linear-gradient(135deg, rgba(127,29,29,0.9), rgba(70,10,10,0.95))',
+            border: `1px solid ${didWinBattle ? '#166534' : '#7f1d1d'}`,
+            color: didWinBattle ? '#4ade80' : '#f87171',
+            boxShadow: didWinBattle ? '0 0 20px rgba(74,222,128,0.15)' : '0 0 20px rgba(248,113,113,0.15)',
+            clipPath: 'polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px))',
+          }}
         >
-          {/* Defeat Screen */}
-          <div className="text-center mb-6">
-            <div className="text-5xl mb-2">💀</div>
-            <h1 className="text-3xl font-black text-red-300 mb-1 tracking-[0.2em]">DEFEATED!</h1>
-            <p className="text-gray-400 text-sm">You were defeated by {monster.name}</p>
-          </div>
+          {didWinBattle ? 'Continue to Next' : 'Return to Map'}
+          <ChevronRight size={14} />
+        </motion.button>
+      </motion.div>
+    </div>
+  )
+}
 
-          {/* Defeat Summary */}
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700 text-sm pixel-panel"
-          >
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <p className="text-gray-400 text-xs uppercase">Damage Dealt</p>
-                <p className="text-lg font-bold text-red-400">{runStats.totalDamageDealt}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs uppercase">Turns</p>
-                <p className="text-lg font-bold text-blue-400">{runStats.totalTurns}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs uppercase">Level</p>
-                <p className="text-lg font-bold text-yellow-400">{hero.level}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Action Button */}
-          <motion.button
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            onClick={continueAfterBattle}
-            className="w-full py-3 px-6 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-all hover:scale-105 active:scale-95 pixel-button"
-          >
-            Return to Map
-          </motion.button>
-        </motion.div>
-      )}
+function StatCard({
+  label, value, color, icon,
+}: {
+  label: string; value: string | number; color: string; icon: React.ReactNode
+}) {
+  return (
+    <div
+      className="text-center p-2"
+      style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid var(--border)' }}
+    >
+      <div className="flex justify-center mb-1" style={{ color }}>{icon}</div>
+      <p className="text-[7px]" style={{ color: 'var(--text-muted)' }}>{label}</p>
+      <p className="text-[11px] font-bold" style={{ color }}>{value}</p>
     </div>
   )
 }

@@ -8,21 +8,45 @@ interface MonsterTellProps {
 
 export function MonsterTell({ monsterName, move }: MonsterTellProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="bg-gray-800 border-2 border-red-500/50 p-3 rounded-lg shadow-lg shadow-red-900/20 text-center max-w-xs mx-auto mb-4"
+    // Wrapper handles the outer animation (in BattleScreen)
+    // This component just renders the content
+    <div
+      className="monster-tell px-4 py-2 w-full"
+      style={{
+        clipPath: 'polygon(0 5px, 5px 5px, 5px 0, calc(100% - 5px) 0, calc(100% - 5px) 5px, 100% 5px, 100% calc(100% - 5px), calc(100% - 5px) calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 5px calc(100% - 5px), 0 calc(100% - 5px))',
+        fontFamily: "'Press Start 2P', monospace",
+      }}
     >
-      <div className="text-xs text-gray-400 mb-1 uppercase tracking-wider">
-        ⚠️ {monsterName} is preparing
+      <div className="flex items-center gap-2 justify-center">
+        {/* Pulsing warning dot */}
+        <motion.span
+          animate={{ opacity: [1, 0.2, 1] }}
+          transition={{ repeat: Infinity, duration: 0.7 }}
+          style={{ color: '#f87171', fontSize: 10 }}
+        >
+          ⚠
+        </motion.span>
+
+        <div className="text-center">
+          <p className="text-[6px] tracking-[0.25em] mb-0.5" style={{ color: 'rgba(248,113,113,0.6)' }}>
+            {monsterName.toUpperCase()} PREPARES
+          </p>
+          <p className="text-[10px] font-bold" style={{ color: '#fca5a5' }}>
+            {move.name}
+          </p>
+          <p className="text-[6px] mt-0.5" style={{ color: 'rgba(248,113,113,0.5)' }}>
+            {move.type} · {move.effect}
+          </p>
+        </div>
+
+        <motion.span
+          animate={{ opacity: [1, 0.2, 1] }}
+          transition={{ repeat: Infinity, duration: 0.7, delay: 0.35 }}
+          style={{ color: '#f87171', fontSize: 10 }}
+        >
+          ⚠
+        </motion.span>
       </div>
-      <div className="font-bold text-red-400 text-lg">
-        {move.name}
-      </div>
-      <div className="text-xs text-gray-500 mt-1">
-        {move.type} • {move.effect}
-      </div>
-    </motion.div>
+    </div>
   )
 }
