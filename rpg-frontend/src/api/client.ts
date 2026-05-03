@@ -1,4 +1,6 @@
-const BASE_URL = 'http://localhost:8081/api'
+const BASE_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api` 
+  : 'http://localhost:8081/api';
 
 export interface Stat {
   health: number
