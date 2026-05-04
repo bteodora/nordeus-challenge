@@ -493,11 +493,12 @@ rpg-gauntlet/
 
 <div align="center">
 
+
 <h3 id="project-assets">PROJECT ASSETS</h3>
 
 [![Specification](https://img.shields.io/badge/SPECIFICATION-PDF-blue?style=for-the-badge&logo=adobe-acrobat-reader&logoColor=white)](./Job%20Fair%202026__Full%20Stack%20Challenge.pdf)
 &nbsp;&nbsp;
-[![Demo Video](https://img.shields.io/badge/DEMO_VIDEO-MP4-red?style=for-the-badge&logo=youtube&logoColor=white)](./demo.mp4)
+[![Demo Video](https://img.shields.io/badge/DEMO_VIDEO-MP4-red?style=for-the-badge&logo=youtube&logoColor=white)](https://github.com/user-attachments/assets/f1d43154-3ccc-4294-afc2-cade4c96611c)
 
 <br />
 
