@@ -19,6 +19,8 @@
   <strong><a href="#api-documentation--swagger">API Docs</a></strong>
   &nbsp;·&nbsp;
   <strong><a href="#running-locally">Run Locally</a></strong>
+  &nbsp;·&nbsp;
+  <strong><a href="#project-assets">Project Assets</a></strong>
 </p>
 
 > **Note on the live demo:** The backend runs on Render's free tier. The first request after a period of inactivity may take 20–30 seconds while the server cold-starts. Subsequent requests are fast.
@@ -486,12 +488,21 @@ rpg-gauntlet/
         └── monsters.json      # Monster definitions, move pools, stat scaling
 ```
 
+
 ---
 
 <div align="center">
 
+<h3 id="project-assets">PROJECT ASSETS</h3>
+
+[![Specification](https://img.shields.io/badge/SPECIFICATION-PDF-blue?style=for-the-badge&logo=adobe-acrobat-reader&logoColor=white)](./Job%20Fair%202026__Full%20Stack%20Challenge.pdf)
+&nbsp;&nbsp;
+[![Demo Video](https://img.shields.io/badge/DEMO_VIDEO-MP4-red?style=for-the-badge&logo=youtube&logoColor=white)](./demo.mp4)
+
+<br />
+
 Built for the **Nordeus Challenge** · Deployed on [Vercel](https://vercel.com) + [Render](https://render.com)
 
-**[▶ Play it live](https://nordeus-challenge-murex.vercel.app/)**
+**[▶ Play the live demo](https://nordeus-challenge-murex.vercel.app/)**
 
 </div>
