@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../../store/gamestore'
 import { useEffect, useState } from 'react'
-import { Play, RotateCcw, Crown, Swords } from 'lucide-react'
+import { Play, RotateCcw, Crown } from 'lucide-react'
 
 interface RuneButtonProps {
   onClick: () => void

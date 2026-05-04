@@ -12,8 +12,33 @@ definitions:
       turns_left:
         type: integer
     type: object
+  models.BattleState:
+    properties:
+      active_buffs:
+        items:
+          $ref: '#/definitions/models.ActiveBuff'
+        type: array
+      hero_hp:
+        type: integer
+      hero_max_hp:
+        type: integer
+      hero_stats:
+        $ref: '#/definitions/models.Stat'
+      monster_hp:
+        type: integer
+      monster_id:
+        type: string
+      monster_max_hp:
+        type: integer
+      monster_stats:
+        $ref: '#/definitions/models.Stat'
+      turn:
+        type: integer
+    type: object
   models.Monster:
     properties:
+      coins_reward:
+        type: integer
       difficulty:
         type: integer
       id:
@@ -44,8 +69,12 @@ definitions:
       effect:
         description: '"damage" | "heal" | "buff" | "debuff"'
         type: string
+      hp_cost:
+        type: integer
       id:
         type: string
+      mana_cost:
+        type: integer
       name:
         type: string
       target_stat:
@@ -90,6 +119,30 @@ definitions:
         items:
           $ref: '#/definitions/models.Monster'
         type: array
+      shop_items:
+        items:
+          $ref: '#/definitions/models.ShopItem'
+        type: array
+    type: object
+  models.ShopItem:
+    properties:
+      amount:
+        type: integer
+      cost:
+        type: integer
+      description:
+        type: string
+      id:
+        type: string
+      move:
+        $ref: '#/definitions/models.Move'
+      name:
+        type: string
+      stat:
+        type: string
+      type:
+        description: '"move" | "stat"'
+        type: string
     type: object
   models.Stat:
     properties:
@@ -110,14 +163,17 @@ info:
   version: "1.0"
 paths:
   /api/monster/move:
-    get:
+    post:
+      consumes:
+      - application/json
       description: Returns monster move based on current battle state
       parameters:
       - description: Current battle state as JSON
-        in: query
+        in: body
         name: state
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/models.BattleState'
       produces:
       - application/json
       responses:

@@ -16,19 +16,24 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/monster/move": {
-            "get": {
+            "post": {
                 "description": "Returns monster move based on current battle state",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "summary": "Get monster's next move",
                 "parameters": [
                     {
-                        "type": "string",
                         "description": "Current battle state as JSON",
                         "name": "state",
-                        "in": "query",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BattleState"
+                        }
                     }
                 ],
                 "responses": {
@@ -78,9 +83,47 @@ const docTemplate = `{
                 }
             }
         },
+        "models.BattleState": {
+            "type": "object",
+            "properties": {
+                "active_buffs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ActiveBuff"
+                    }
+                },
+                "hero_hp": {
+                    "type": "integer"
+                },
+                "hero_max_hp": {
+                    "type": "integer"
+                },
+                "hero_stats": {
+                    "$ref": "#/definitions/models.Stat"
+                },
+                "monster_hp": {
+                    "type": "integer"
+                },
+                "monster_id": {
+                    "type": "string"
+                },
+                "monster_max_hp": {
+                    "type": "integer"
+                },
+                "monster_stats": {
+                    "$ref": "#/definitions/models.Stat"
+                },
+                "turn": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Monster": {
             "type": "object",
             "properties": {
+                "coins_reward": {
+                    "type": "integer"
+                },
                 "difficulty": {
                     "type": "integer"
                 },
@@ -126,8 +169,14 @@ const docTemplate = `{
                     "description": "\"damage\" | \"heal\" | \"buff\" | \"debuff\"",
                     "type": "string"
                 },
+                "hp_cost": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "string"
+                },
+                "mana_cost": {
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string"
@@ -194,6 +243,42 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.Monster"
                     }
+                },
+                "shop_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ShopItem"
+                    }
+                }
+            }
+        },
+        "models.ShopItem": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "move": {
+                    "$ref": "#/definitions/models.Move"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stat": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"move\" | \"stat\"",
+                    "type": "string"
                 }
             }
         },
@@ -227,6 +312,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Backend za Nordeus Full Stack Challenge",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {
