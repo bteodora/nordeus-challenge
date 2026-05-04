@@ -4,7 +4,7 @@
     "name": "Goblin Warrior",
     "difficulty": 1,
     "xp_reward": 50,
-    "stats": { "health": 80, "attack": 18, "defense": 12, "magic": 5 },
+    "stats": { "health": 80, "attack": 10, "defense": 12, "magic": 5 },
     "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"]
   },
   {
